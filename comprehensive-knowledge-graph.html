@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>00后人生问题知识图谱 - 全面系统版</title>
+  <meta name="description" content="全面解析当代年轻人面临的成长挑战，涵盖学习成长、职业发展、人际关系、心理健康、情感生活、社会适应六大核心领域">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- D3.js -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/comprehensive-graph.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Noto Sans SC', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            primary: '#6366f1',
+            secondary: '#8b5cf6',
+            accent: '#ec4899',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    /* 基础样式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans SC', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    
+    /* 滚动条样式 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #6366f1, #8b5cf6);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #818cf8, #a78bfa);
+    }
+    
+    /* 玻璃态效果 */
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .glass-strong {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    
+    /* 动画 */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.6); }
+    }
+    
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .animate-pulse-glow {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    
+    .gradient-text {
+      background: linear-gradient(90deg, #6366f1, #ec4899, #8b5cf6, #6366f1);
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradient-shift 4s ease infinite;
+    }
+    
+    /* 图表容器 */
+    #graph-container {
+      width: 100%;
+      height: calc(100vh - 80px);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* SVG 样式 */
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* 节点样式 */
+    .node {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .node:hover {
+      filter: brightness(1.2);
+    }
+    
+    .node-circle {
+      transition: all 0.3s ease;
+    }
+    
+    .node:hover .node-circle {
+      filter: drop-shadow(0 0 10px currentColor);
+    }
+    
+    /* 连线样式 */
+    .link {
+      fill: none;
+      stroke-opacity: 0.6;
+      transition: all 0.3s ease;
+    }
+    
+    .link:hover {
+      stroke-opacity: 1;
+      stroke-width: 3px;
+    }
+    
+    /* 标签样式 */
+    .node-label {
+      font-size: 12px;
+      font-weight: 500;
+      fill: #e2e8f0;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      pointer-events: none;
+    }
+    
+    /* 详情面板 */
+    .detail-panel {
+      position: fixed;
+      right: -450px;
+      top: 80px;
+      width: 420px;
+      height: calc(100vh - 100px);
+      transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      overflow-y: auto;
+    }
+    
+    .detail-panel.active {
+      right: 20px;
+    }
+    
+    /* 搜索下拉 */
+    .search-dropdown {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    /* 加载动画 */
+    .loader {
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      border-top: 3px solid #6366f1;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .detail-panel {
+        width: 100%;
+        right: -100%;
+        top: auto;
+        bottom: 0;
+        height: 60vh;
+        border-radius: 20px 20px 0 0;
+      }
+      
+      .detail-panel.active {
+        right: 0;
+      }
+    }
+    
+    /* 工具提示 */
+    .tooltip {
+      position: absolute;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1000;
+      max-width: 250px;
+    }
+    
+    /* 统计卡片 */
+    .stat-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+    
+    /* ==================== 节点详情模态弹窗样式 ==================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 20px;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal-container {
+      width: 90%;
+      max-width: 900px;
+      max-height: 90vh;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95) translateY(20px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-overlay.active .modal-container {
+      transform: scale(1) translateY(0);
+    }
+    
+    .modal-container.maximized {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 0;
+    }
+    
+    .modal-container.minimized {
+      height: auto;
+      max-height: 70px;
+      overflow: hidden;
+    }
+    
+    .modal-container.minimized .modal-stats,
+    .modal-container.minimized .modal-tabs,
+    .modal-container.minimized .modal-content,
+    .modal-container.minimized .modal-footer {
+      display: none;
+    }
+    
+    /* 标题栏 */
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .modal-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .modal-title .node-icon {
+      font-size: 28px;
+    }
+    
+    .modal-title .node-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    
+    .modal-title .node-badge {
+      padding: 4px 12px;
+      background: rgba(99, 102, 241, 0.2);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #818cf8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .modal-controls {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .modal-controls button {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: none;
+      background: rgba(255, 255, 255, 0.05);
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-controls button:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+    }
+    
+    .modal-controls .btn-close:hover {
+      background: #ef4444;
+      color: white;
+    }
+    
+    /* 统计卡片区域 */
+    .modal-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding: 20px 24px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .modal-stat-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    
+    .modal-stat-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-2px);
+    }
+    
+    .modal-stat-card .stat-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    
+    .modal-stat-card .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 4px;
+    }
+    
+    .modal-stat-card .stat-label {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    
+    /* Tab导航 */
+    .modal-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 0 24px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      overflow-x: auto;
+    }
+    
+    .tab-btn {
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    
+    .tab-btn:hover {
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .tab-btn.active {
+      color: #6366f1;
+      border-bottom-color: #6366f1;
+      background: rgba(99, 102, 241, 0.1);
+    }
+    
+    /* 内容区域 */
+    .modal-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .tab-panel.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .content-section {
+      margin-bottom: 24px;
+    }
+    
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    
+    .section-content {
+      color: #cbd5e1;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      list-style: none;
+      padding: 0;
+    }
+    
+    .tag-list li {
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      font-size: 13px;
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .symptoms-list,
+    .causes-list,
+    .solutions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .list-item {
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .list-item .item-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(99, 102, 241, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    
+    .list-item .item-content {
+      flex: 1;
+    }
+    
+    .list-item .item-title {
+      font-weight: 600;
+      color: #f8fafc;
+      margin-bottom: 4px;
+    }
+    
+    .list-item .item-desc {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    
+    /* 底部工具栏 */
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: rgba(255, 255, 255, 0.03);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .footer-left,
+    .footer-right {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .btn-tool {
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-tool:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+    }
+    
+    .btn-update {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-color: transparent;
+      color: white;
+    }
+    
+    .btn-update:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+    }
+    
+    /* 响应式适配 */
+    @media (max-width: 768px) {
+      .modal-overlay {
+        padding: 0;
+      }
+      
+      .modal-container {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 0;
+      }
+      
+      .modal-stats {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 16px;
+      }
+      
+      .modal-tabs {
+        padding: 0 16px;
+      }
+      
+      .tab-btn {
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      
+      .modal-content {
+        padding: 16px;
+      }
+      
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .modal-footer {
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+      }
+      
+      .footer-left,
+      .footer-right {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .modal-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      
+      .modal-stat-card {
+        padding: 12px;
+      }
+      
+      .modal-title .node-name {
+        font-size: 16px;
+      }
+    }
+    
+    /* 领域颜色 */
+    .domain-learning { color: #3b82f6; }
+    .domain-career { color: #10b981; }
+    .domain-relationship { color: #f59e0b; }
+    .domain-mental { color: #8b5cf6; }
+    .domain-emotion { color: #ec4899; }
+    .domain-social { color: #06b6d4; }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航栏 -->
+  <header class="fixed top-0 left-0 right-0 h-20 glass-strong z-50">
+    <div class="h-full px-6 flex items-center justify-between">
+      <!-- Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center animate-pulse-glow">
+          <i class="fas fa-project-diagram text-white text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold gradient-text">00后人生问题图谱</h1>
+          <p class="text-xs text-gray-400">全面系统版 v2.0</p>
+        </div>
+      </div>
+      
+      <!-- 搜索框 -->
+      <div class="hidden md:flex items-center gap-4 flex-1 max-w-xl mx-8">
+        <div class="relative flex-1">
+          <input 
+            type="text" 
+            id="search-input"
+            placeholder="搜索问题、症状或解决方案..." 
+            class="w-full px-4 py-2.5 pl-11 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+          >
+          <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+          <div id="search-results" class="search-dropdown absolute top-full left-0 right-0 mt-2 glass rounded-xl hidden"></div>
+        </div>
+      </div>
+      
+      <!-- 控制按钮 -->
+      <div class="flex items-center gap-2">
+        <!-- 视图切换 -->
+        <div class="hidden lg:flex items-center bg-white/5 rounded-lg p-1">
+          <button class="view-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all bg-indigo-500 text-white" data-view="network">
+            <i class="fas fa-circle-nodes mr-1"></i>网络图
+          </button>
+          <button class="view-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-400 hover:text-white" data-view="radial">
+            <i class="fas fa-bullseye mr-1"></i>径向图
+          </button>
+          <button class="view-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-400 hover:text-white" data-view="tree">
+            <i class="fas fa-sitemap mr-1"></i>树状图
+          </button>
+        </div>
+        
+        <!-- 重置视图 -->
+        <button id="reset-view" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-gray-400 hover:text-white" title="重置视图">
+          <i class="fas fa-compress-arrows-alt"></i>
+        </button>
+        
+        <!-- 全屏 -->
+        <button id="fullscreen" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-gray-400 hover:text-white" title="全屏">
+          <i class="fas fa-expand"></i>
+        </button>
+        
+        <!-- 统计 -->
+        <button id="show-stats" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-gray-400 hover:text-white" title="统计信息">
+          <i class="fas fa-chart-pie"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="pt-20">
+    <!-- 图表容器 -->
+    <div id="graph-container">
+      <!-- 加载动画 -->
+      <div id="loading" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 z-50">
+        <div class="loader mb-4"></div>
+        <p class="text-gray-400 text-sm">正在加载知识图谱...</p>
+        <p class="text-gray-500 text-xs mt-2">包含 413+ 问题节点 · 36 子类别 · 6 核心领域</p>
+        <p class="text-gray-600 text-xs mt-1">含扩展数据：案例研究 · 行业趋势 · 详细解决方案</p>
+      </div>
+      
+      <!-- SVG 将由 D3.js 生成 -->
+    </div>
+    
+    <!-- 左侧控制面板 -->
+    <div class="fixed left-6 top-28 w-64 glass rounded-2xl p-4 z-40 hidden lg:block">
+      <h3 class="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+        <i class="fas fa-filter text-indigo-400"></i>
+        筛选显示
+      </h3>
+      
+      <!-- 领域筛选 -->
+      <div class="space-y-2 mb-4">
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="domain-filter rounded border-gray-600 text-indigo-500 focus:ring-indigo-500" value="learning" checked>
+          <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+          学习成长
+        </label>
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="domain-filter rounded border-gray-600 text-indigo-500 focus:ring-indigo-500" value="career" checked>
+          <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+          职业发展
+        </label>
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="domain-filter rounded border-gray-600 text-indigo-500 focus:ring-indigo-500" value="relationship" checked>
+          <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+          人际关系
+        </label>
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="domain-filter rounded border-gray-600 text-indigo-500 focus:ring-indigo-500" value="mental" checked>
+          <span class="w-3 h-3 rounded-full bg-violet-500"></span>
+          心理健康
+        </label>
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="domain-filter rounded border-gray-600 text-indigo-500 focus:ring-indigo-500" value="emotion" checked>
+          <span class="w-3 h-3 rounded-full bg-pink-500"></span>
+          情感生活
+        </label>
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="domain-filter rounded border-gray-600 text-indigo-500 focus:ring-indigo-500" value="social" checked>
+          <span class="w-3 h-3 rounded-full bg-cyan-500"></span>
+          社会适应
+        </label>
+      </div>
+      
+      <!-- 严重程度筛选 -->
+      <h3 class="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+        <i class="fas fa-exclamation-triangle text-amber-400"></i>
+        严重程度
+      </h3>
+      <div class="space-y-2">
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="severity-filter rounded border-gray-600 text-red-500 focus:ring-red-500" value="critical" checked>
+          <span class="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">严重</span>
+        </label>
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="severity-filter rounded border-gray-600 text-orange-500 focus:ring-orange-500" value="high" checked>
+          <span class="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 text-xs">高</span>
+        </label>
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="severity-filter rounded border-gray-600 text-yellow-500 focus:ring-yellow-500" value="medium" checked>
+          <span class="px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 text-xs">中</span>
+        </label>
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="severity-filter rounded border-gray-600 text-green-500 focus:ring-green-500" value="low" checked>
+          <span class="px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">低</span>
+        </label>
+      </div>
+      
+      <!-- 图例说明 -->
+      <div class="mt-6 pt-4 border-t border-white/10">
+        <h3 class="text-xs font-semibold text-gray-400 mb-2">连线说明</h3>
+        <div class="space-y-1.5 text-xs text-gray-500">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-0.5 bg-indigo-500"></span>
+            <span>促进关系</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-0.5 bg-rose-500"></span>
+            <span>影响关系</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-0.5 bg-emerald-500"></span>
+            <span>支持关系</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 右侧详情面板 -->
+    <div id="detail-panel" class="detail-panel glass-strong rounded-2xl">
+      <div class="p-6">
+        <!-- 关闭按钮 -->
+        <button id="close-detail" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition-all text-gray-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+        
+        <!-- 内容区域 -->
+        <div id="detail-content">
+          <div class="text-center text-gray-500 py-12">
+            <i class="fas fa-mouse-pointer text-4xl mb-4 opacity-50"></i>
+            <p>点击节点查看详细信息</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 节点详情模态弹窗 -->
+    <div id="node-detail-modal" class="modal-overlay">
+      <div class="modal-container">
+        <!-- 标题栏 -->
+        <div class="modal-header">
+          <div class="modal-title">
+            <span class="node-icon" id="modal-node-icon">🔹</span>
+            <span class="node-name" id="modal-node-name">节点名称</span>
+            <span class="node-badge" id="modal-node-type">类型</span>
+          </div>
+          <div class="modal-controls">
+            <button class="btn-minimize" title="最小化">
+              <i class="fas fa-minus"></i>
+            </button>
+            <button class="btn-maximize" title="最大化">
+              <i class="fas fa-expand"></i>
+            </button>
+            <button class="btn-close" title="关闭">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 统计卡片区域 -->
+        <div class="modal-stats">
+          <div class="modal-stat-card">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-value" id="modal-stat-severity">-</div>
+            <div class="stat-label">严重程度</div>
+          </div>
+          <div class="modal-stat-card">
+            <div class="stat-icon">🔗</div>
+            <div class="stat-value" id="modal-stat-related">-</div>
+            <div class="stat-label">关联问题</div>
+          </div>
+          <div class="modal-stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value" id="modal-stat-impact">-</div>
+            <div class="stat-label">影响范围</div>
+          </div>
+          <div class="modal-stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-value" id="modal-stat-difficulty">-</div>
+            <div class="stat-label">解决难度</div>
+          </div>
+        </div>
+        
+        <!-- Tab导航 -->
+        <div class="modal-tabs">
+          <button class="tab-btn active" data-tab="overview">
+            <i class="fas fa-info-circle"></i> 概览
+          </button>
+          <button class="tab-btn" data-tab="symptoms">
+            <i class="fas fa-stethoscope"></i> 症状
+          </button>
+          <button class="tab-btn" data-tab="causes">
+            <i class="fas fa-search"></i> 原因
+          </button>
+          <button class="tab-btn" data-tab="solutions">
+            <i class="fas fa-lightbulb"></i> 解决方案
+          </button>
+          <button class="tab-btn" data-tab="resources">
+            <i class="fas fa-book"></i> 资源
+          </button>
+        </div>
+        
+        <!-- 内容区域 -->
+        <div class="modal-content">
+          <!-- 概览Tab -->
+          <div class="tab-panel active" id="tab-overview">
+            <div class="content-section">
+              <h3 class="section-title">📋 问题描述</h3>
+              <p class="section-content" id="overview-description">点击节点查看详细信息</p>
+            </div>
+            <div class="content-grid">
+              <div class="content-section">
+                <h3 class="section-title">🔍 关键症状</h3>
+                <ul class="tag-list" id="overview-symptoms"></ul>
+              </div>
+              <div class="content-section">
+                <h3 class="section-title">🎯 主要原因</h3>
+                <ul class="tag-list" id="overview-causes"></ul>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 症状Tab -->
+          <div class="tab-panel" id="tab-symptoms">
+            <div class="content-section">
+              <h3 class="section-title">详细症状列表</h3>
+              <div class="symptoms-list" id="symptoms-detail"></div>
+            </div>
+          </div>
+          
+          <!-- 原因Tab -->
+          <div class="tab-panel" id="tab-causes">
+            <div class="content-section">
+              <h3 class="section-title">深层原因分析</h3>
+              <div class="causes-list" id="causes-detail"></div>
+            </div>
+          </div>
+          
+          <!-- 解决方案Tab -->
+          <div class="tab-panel" id="tab-solutions">
+            <div class="content-section">
+              <h3 class="section-title">建议解决方案</h3>
+              <div class="solutions-list" id="solutions-detail"></div>
+            </div>
+          </div>
+          
+          <!-- 资源Tab -->
+          <div class="tab-panel" id="tab-resources">
+            <div class="content-section">
+              <h3 class="section-title">相关资源</h3>
+              <div class="resources-list" id="resources-detail">
+                <div class="resource-item">
+                  <i class="fas fa-external-link-alt"></i>
+                  <span>相关文章和资料将在这里显示</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 底部工具栏 -->
+        <div class="modal-footer">
+          <div class="footer-left">
+            <button class="btn-tool btn-filter" id="btn-filter">
+              <i class="fas fa-filter"></i> 筛选
+            </button>
+            <button class="btn-tool btn-edit" id="btn-edit">
+              <i class="fas fa-edit"></i> 编辑
+            </button>
+          </div>
+          <div class="footer-right">
+            <button class="btn-tool btn-export" id="btn-export">
+              <i class="fas fa-download"></i> 导出
+            </button>
+            <button class="btn-tool btn-update" id="btn-update">
+              <i class="fas fa-check-circle"></i> 标记已解决
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 统计面板 -->
+    <div id="stats-panel" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+      <div class="glass-strong rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold gradient-text">数据统计</h2>
+          <button id="close-stats" class="p-2 rounded-lg hover:bg-white/10 transition-all text-gray-400 hover:text-white">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div class="stat-card rounded-xl p-4 text-center">
+            <div class="text-3xl font-bold text-indigo-400 mb-1" id="stat-total-problems">413+</div>
+            <div class="text-xs text-gray-400">总问题数</div>
+          </div>
+          <div class="stat-card rounded-xl p-4 text-center">
+            <div class="text-3xl font-bold text-emerald-400 mb-1">6</div>
+            <div class="text-xs text-gray-400">核心领域</div>
+          </div>
+          <div class="stat-card rounded-xl p-4 text-center">
+            <div class="text-3xl font-bold text-amber-400 mb-1" id="stat-subcategories">36</div>
+            <div class="text-xs text-gray-400">子类别</div>
+          </div>
+          <div class="stat-card rounded-xl p-4 text-center">
+            <div class="text-3xl font-bold text-rose-400 mb-1" id="stat-high-severity">165</div>
+            <div class="text-xs text-gray-400">高严重度</div>
+          </div>
+        </div>
+        
+        <!-- 领域分布 -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-white mb-4">领域分布</h3>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <span class="w-24 text-sm text-gray-400">学习成长</span>
+              <div class="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-500 rounded-full" style="width: 20%"></div>
+              </div>
+              <span class="w-12 text-sm text-right text-gray-300">84</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-24 text-sm text-gray-400">职业发展</span>
+              <div class="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bg-emerald-500 rounded-full" style="width: 22%"></div>
+              </div>
+              <span class="w-12 text-sm text-right text-gray-300">89</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-24 text-sm text-gray-400">人际关系</span>
+              <div class="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bg-amber-500 rounded-full" style="width: 14%"></div>
+              </div>
+              <span class="w-12 text-sm text-right text-gray-300">60</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-24 text-sm text-gray-400">心理健康</span>
+              <div class="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bg-violet-500 rounded-full" style="width: 14%"></div>
+              </div>
+              <span class="w-12 text-sm text-right text-gray-300">60</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-24 text-sm text-gray-400">情感生活</span>
+              <div class="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bg-pink-500 rounded-full" style="width: 14%"></div>
+              </div>
+              <span class="w-12 text-sm text-right text-gray-300">60</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-24 text-sm text-gray-400">社会适应</span>
+              <div class="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bg-cyan-500 rounded-full" style="width: 14%"></div>
+              </div>
+              <span class="w-12 text-sm text-right text-gray-300">60</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 严重程度分布 -->
+        <div>
+          <h3 class="text-lg font-semibold text-white mb-4">严重程度分布</h3>
+          <div class="flex gap-4">
+            <div class="flex-1 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-red-400 mb-1">28</div>
+              <div class="text-xs text-gray-400">严重</div>
+            </div>
+            <div class="flex-1 bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-orange-400 mb-1">137</div>
+              <div class="text-xs text-gray-400">高</div>
+            </div>
+            <div class="flex-1 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-yellow-400 mb-1">170</div>
+              <div class="text-xs text-gray-400">中</div>
+            </div>
+            <div class="flex-1 bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-green-400 mb-1">78</div>
+              <div class="text-xs text-gray-400">低</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 扩展数据统计 -->
+        <div class="mt-6">
+          <h3 class="text-lg font-semibold text-white mb-4">扩展数据</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-indigo-400 mb-1">4</div>
+              <div class="text-xs text-gray-400">实际案例</div>
+            </div>
+            <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-purple-400 mb-1">14</div>
+              <div class="text-xs text-gray-400">扩展关系</div>
+            </div>
+            <div class="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-cyan-400 mb-1">6</div>
+              <div class="text-xs text-gray-400">新增子类别</div>
+            </div>
+            <div class="bg-pink-500/10 border border-pink-500/30 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-pink-400 mb-1">48</div>
+              <div class="text-xs text-gray-400">新增问题节点</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- 工具提示 -->
+  <div id="tooltip" class="tooltip"></div>
+  
+  <!-- 引入数据文件 -->
+  <script src="js/comprehensive-data.js"></script>
+  
+  <!-- 引入数据扩展 -->
+  <script src="js/data-extensions.js"></script>
+  
+  <!-- 引入可视化引擎 -->
+  <script src="js/comprehensive-visualization.js"></script>
+  
+  <!-- 节点详情弹窗类 -->
+  <script>
+    class NodeDetailModal {
+      constructor() {
+        this.modal = document.getElementById('node-detail-modal');
+        this.container = this.modal?.querySelector('.modal-container');
+        this.currentNode = null;
+        this.isMaximized = false;
+        this.isMinimized = false;
+        
+        if (this.modal) {
+          this.init();
+        }
+      }
+      
+      init() {
+        this.bindEvents();
+        this.initTabs();
+      }
+      
+      bindEvents() {
+        // 关闭按钮
+        const closeBtn = this.modal.querySelector('.btn-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', () => this.close());
+        }
+        
+        // 最大化按钮
+        const maximizeBtn = this.modal.querySelector('.btn-maximize');
+        if (maximizeBtn) {
+          maximizeBtn.addEventListener('click', () => this.toggleMaximize());
+        }
+        
+        // 最小化按钮
+        const minimizeBtn = this.modal.querySelector('.btn-minimize');
+        if (minimizeBtn) {
+          minimizeBtn.addEventListener('click', () => this.toggleMinimize());
+        }
+        
+        // 点击遮罩关闭
+        this.modal.addEventListener('click', (e) => {
+          if (e.target === this.modal) {
+            this.close();
+          }
+        });
+        
+        // ESC关闭
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && this.modal.classList.contains('active')) {
+            this.close();
+          }
+        });
+        
+        // 底部工具栏按钮
+        const filterBtn = document.getElementById('btn-filter');
+        const editBtn = document.getElementById('btn-edit');
+        const exportBtn = document.getElementById('btn-export');
+        const updateBtn = document.getElementById('btn-update');
+        
+        if (filterBtn) {
+          filterBtn.addEventListener('click', () => this.handleFilter());
+        }
+        if (editBtn) {
+          editBtn.addEventListener('click', () => this.handleEdit());
+        }
+        if (exportBtn) {
+          exportBtn.addEventListener('click', () => this.handleExport());
+        }
+        if (updateBtn) {
+          updateBtn.addEventListener('click', () => this.handleUpdate());
+        }
+      }
+      
+      initTabs() {
+        const tabBtns = this.modal.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const tabId = btn.dataset.tab;
+            this.switchTab(tabId);
+          });
+        });
+      }
+      
+      open(node) {
+        if (!node) return;
+        
+        this.currentNode = node;
+        this.render(node);
+        this.modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // 重置状态
+        this.isMaximized = false;
+        this.isMinimized = false;
+        this.container.classList.remove('maximized', 'minimized');
+      }
+      
+      close() {
+        this.modal.classList.remove('active');
+        document.body.style.overflow = '';
+        this.currentNode = null;
+      }
+      
+      toggleMaximize() {
+        this.isMaximized = !this.isMaximized;
+        this.container.classList.toggle('maximized', this.isMaximized);
+        
+        // 更新图标
+        const icon = this.modal.querySelector('.btn-maximize i');
+        if (icon) {
+          icon.className = this.isMaximized ? 'fas fa-compress' : 'fas fa-expand';
+        }
+      }
+      
+      toggleMinimize() {
+        this.isMinimized = !this.isMinimized;
+        this.container.classList.toggle('minimized', this.isMinimized);
+      }
+      
+      switchTab(tabId) {
+        // 切换Tab按钮状态
+        this.modal.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.tab === tabId);
+        });
+        
+        // 切换内容面板
+        this.modal.querySelectorAll('.tab-panel').forEach(panel => {
+          panel.classList.toggle('active', panel.id === `tab-${tabId}`);
+        });
+      }
+      
+      render(node) {
+        // 渲染标题
+        const iconEl = document.getElementById('modal-node-icon');
+        const nameEl = document.getElementById('modal-node-name');
+        const typeEl = document.getElementById('modal-node-type');
+        
+        if (iconEl) iconEl.textContent = node.icon || '🔹';
+        if (nameEl) nameEl.textContent = node.name || '未命名节点';
+        if (typeEl) {
+          const typeMap = {
+            'center': '中心',
+            'domain': '领域',
+            'subcategory': '子类别',
+            'problem': '问题'
+          };
+          typeEl.textContent = typeMap[node.type] || node.type;
+        }
+        
+        // 渲染统计数据
+        this.renderStats(node);
+        
+        // 渲染Tab内容
+        this.renderTabContent(node);
+      }
+      
+      renderStats(node) {
+        const severityEl = document.getElementById('modal-stat-severity');
+        const relatedEl = document.getElementById('modal-stat-related');
+        const impactEl = document.getElementById('modal-stat-impact');
+        const difficultyEl = document.getElementById('modal-stat-difficulty');
+        
+        // 严重程度
+        if (severityEl) {
+          const severityMap = {
+            'critical': '严重',
+            'high': '高',
+            'medium': '中',
+            'low': '低'
+          };
+          severityEl.textContent = severityMap[node.severity] || '-';
+          severityEl.style.color = this.getSeverityColor(node.severity);
+        }
+        
+        // 关联问题数
+        if (relatedEl) {
+          relatedEl.textContent = node.symptoms?.length || node.causes?.length || 0;
+        }
+        
+        // 影响范围
+        if (impactEl) {
+          impactEl.textContent = node.type === 'problem' ? '个人' : '群体';
+        }
+        
+        // 解决难度
+        if (difficultyEl) {
+          const difficultyMap = {
+            'critical': '极高',
+            'high': '高',
+            'medium': '中等',
+            'low': '低'
+          };
+          difficultyEl.textContent = difficultyMap[node.severity] || '未知';
+        }
+      }
+      
+      renderTabContent(node) {
+        // 概览Tab
+        const descEl = document.getElementById('overview-description');
+        if (descEl) {
+          descEl.textContent = node.description || '暂无描述信息';
+        }
+        
+        // 症状列表
+        const symptomsEl = document.getElementById('overview-symptoms');
+        if (symptomsEl && node.symptoms) {
+          symptomsEl.innerHTML = node.symptoms.map(s => `<li>${s}</li>`).join('');
+        } else if (symptomsEl) {
+          symptomsEl.innerHTML = '<li>暂无症状信息</li>';
+        }
+        
+        // 原因列表
+        const causesEl = document.getElementById('overview-causes');
+        if (causesEl && node.causes) {
+          causesEl.innerHTML = node.causes.map(c => `<li>${c}</li>`).join('');
+        } else if (causesEl) {
+          causesEl.innerHTML = '<li>暂无原因信息</li>';
+        }
+        
+        // 详细症状Tab
+        const symptomsDetailEl = document.getElementById('symptoms-detail');
+        if (symptomsDetailEl && node.symptoms) {
+          symptomsDetailEl.innerHTML = node.symptoms.map((s, i) => `
+            <div class="list-item">
+              <div class="item-icon">${i + 1}</div>
+              <div class="item-content">
+                <div class="item-title">${s}</div>
+                <div class="item-desc">这是该问题的典型症状表现之一</div>
+              </div>
+            </div>
+          `).join('');
+        } else if (symptomsDetailEl) {
+          symptomsDetailEl.innerHTML = '<div class="text-gray-500 text-center py-8">暂无症状信息</div>';
+        }
+        
+        // 详细原因Tab
+        const causesDetailEl = document.getElementById('causes-detail');
+        if (causesDetailEl && node.causes) {
+          causesDetailEl.innerHTML = node.causes.map((c, i) => `
+            <div class="list-item">
+              <div class="item-icon">${i + 1}</div>
+              <div class="item-content">
+                <div class="item-title">${c}</div>
+                <div class="item-desc">这是导致该问题的主要原因之一</div>
+              </div>
+            </div>
+          `).join('');
+        } else if (causesDetailEl) {
+          causesDetailEl.innerHTML = '<div class="text-gray-500 text-center py-8">暂无原因信息</div>';
+        }
+        
+        // 解决方案Tab
+        const solutionsDetailEl = document.getElementById('solutions-detail');
+        if (solutionsDetailEl && node.solutions) {
+          solutionsDetailEl.innerHTML = node.solutions.map((s, i) => `
+            <div class="list-item">
+              <div class="item-icon">💡</div>
+              <div class="item-content">
+                <div class="item-title">${s}</div>
+                <div class="item-desc">建议尝试的解决方案</div>
+              </div>
+            </div>
+          `).join('');
+        } else if (solutionsDetailEl) {
+          solutionsDetailEl.innerHTML = '<div class="text-gray-500 text-center py-8">暂无解决方案信息</div>';
+        }
+      }
+      
+      getSeverityColor(severity) {
+        const colors = {
+          'critical': '#ef4444',
+          'high': '#f97316',
+          'medium': '#eab308',
+          'low': '#22c55e'
+        };
+        return colors[severity] || '#94a3b8';
+      }
+      
+      handleFilter() {
+        alert('筛选功能：可以根据严重程度、领域等条件筛选相关问题');
+      }
+      
+      handleEdit() {
+        alert('编辑功能：可以编辑节点信息（需要管理员权限）');
+      }
+      
+      handleExport() {
+        if (!this.currentNode) return;
+        
+        const data = {
+          name: this.currentNode.name,
+          type: this.currentNode.type,
+          description: this.currentNode.description,
+          symptoms: this.currentNode.symptoms,
+          causes: this.currentNode.causes,
+          solutions: this.currentNode.solutions,
+          exportTime: new Date().toISOString()
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${this.currentNode.name || 'node'}-details.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+      
+      handleUpdate() {
+        alert('状态已更新！该问题已标记为正在处理');
+      }
+    }
+    
+    // 全局弹窗实例
+    let nodeDetailModal = null;
+  </script>
+  
+  <!-- 主应用逻辑 -->
+  <script>
+    // 合并扩展数据到主数据
+    function mergeExtendedData() {
+      if (typeof DataExtensions !== 'undefined' && typeof ComprehensiveData !== 'undefined') {
+        console.log('📦 正在合并扩展数据...');
+        
+        // 合并学习成长领域扩展
+        if (DataExtensions.learning_extended) {
+          Object.assign(ComprehensiveData.domains.learning.subcategories, DataExtensions.learning_extended);
+        }
+        
+        // 合并职业发展领域扩展
+        if (DataExtensions.career_extended) {
+          Object.assign(ComprehensiveData.domains.career.subcategories, DataExtensions.career_extended);
+        }
+        
+        // 合并案例研究
+        if (DataExtensions.caseStudies) {
+          ComprehensiveData.caseStudies = DataExtensions.caseStudies;
+        }
+        
+        // 合并扩展关系
+        if (DataExtensions.extendedRelationships) {
+          ComprehensiveData.extendedRelationships = DataExtensions.extendedRelationships;
+        }
+        
+        // 合并行业数据
+        if (DataExtensions.industryData) {
+          ComprehensiveData.industryData = DataExtensions.industryData;
+        }
+        
+        // 合并趋势数据
+        if (DataExtensions.trends) {
+          ComprehensiveData.trends = DataExtensions.trends;
+        }
+        
+        // 合并详细解决方案
+        if (DataExtensions.detailedSolutions) {
+          ComprehensiveData.detailedSolutions = DataExtensions.detailedSolutions;
+        }
+        
+        // 合并用户贡献
+        if (DataExtensions.userContributions) {
+          ComprehensiveData.userContributions = DataExtensions.userContributions;
+        }
+        
+        // 更新统计信息
+        updateStatistics();
+        
+        console.log('✅ 扩展数据合并完成');
+        console.log(`📊 当前总问题数: ${countTotalProblems()}`);
+      }
+    }
+    
+    // 统计总问题数
+    function countTotalProblems() {
+      let count = 0;
+      if (typeof ComprehensiveData !== 'undefined') {
+        Object.values(ComprehensiveData.domains).forEach(domain => {
+          Object.values(domain.subcategories).forEach(sub => {
+            if (sub.problems) {
+              count += sub.problems.length;
+            }
+          });
+        });
+      }
+      return count;
+    }
+    
+    // 更新统计显示
+    function updateStatistics() {
+      const totalCount = countTotalProblems();
+      const loadingText = document.querySelector('#loading p.text-gray-500');
+      if (loadingText) {
+        loadingText.textContent = `包含 ${totalCount}+ 问题节点`;
+      }
+    }
+    
+    // 等待 DOM 加载
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 应用启动中...');
+      
+      // 合并扩展数据
+      mergeExtendedData();
+      
+      // 初始化节点详情弹窗
+      nodeDetailModal = new NodeDetailModal();
+      
+      // 延迟隐藏加载动画（确保有足够时间渲染）
+      setTimeout(() => {
+        const loading = document.getElementById('loading');
+        if (loading) {
+          loading.style.opacity = '0';
+          loading.style.transition = 'opacity 0.5s ease';
+          setTimeout(() => {
+            loading.style.display = 'none';
+          }, 500);
+        }
+      }, 1500); // 1.5秒后隐藏
+      
+      // 检查可视化引擎是否已初始化
+      let graph = window.comprehensiveGraph;
+      if (!graph) {
+        // 如果引擎没有自动初始化，则手动初始化
+        graph = new ComprehensiveKnowledgeGraph('graph-container', ComprehensiveData);
+        window.comprehensiveGraph = graph;
+      }
+      
+      // 视图切换
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.view-btn').forEach(b => {
+            b.classList.remove('bg-indigo-500', 'text-white');
+            b.classList.add('text-gray-400');
+          });
+          this.classList.add('bg-indigo-500', 'text-white');
+          this.classList.remove('text-gray-400');
+          
+          const view = this.dataset.view;
+          graph.setViewMode(view);
+        });
+      });
+      
+      // 重置视图
+      document.getElementById('reset-view').addEventListener('click', () => {
+        graph.resetZoom();
+      });
+      
+      // 全屏切换
+      document.getElementById('fullscreen').addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+      
+      // 统计面板
+      const statsPanel = document.getElementById('stats-panel');
+      document.getElementById('show-stats').addEventListener('click', () => {
+        statsPanel.classList.remove('hidden');
+        statsPanel.classList.add('flex');
+      });
+      
+      document.getElementById('close-stats').addEventListener('click', () => {
+        statsPanel.classList.add('hidden');
+        statsPanel.classList.remove('flex');
+      });
+      
+      statsPanel.addEventListener('click', (e) => {
+        if (e.target === statsPanel) {
+          statsPanel.classList.add('hidden');
+          statsPanel.classList.remove('flex');
+        }
+      });
+      
+      // 关闭详情面板
+      document.getElementById('close-detail').addEventListener('click', () => {
+        document.getElementById('detail-panel').classList.remove('active');
+      });
+      
+      // 领域筛选
+      document.querySelectorAll('.domain-filter').forEach(filter => {
+        filter.addEventListener('change', () => {
+          const selectedDomains = Array.from(document.querySelectorAll('.domain-filter:checked'))
+            .map(cb => cb.value);
+          graph.filterByDomains(selectedDomains);
+        });
+      });
+      
+      // 严重程度筛选
+      document.querySelectorAll('.severity-filter').forEach(filter => {
+        filter.addEventListener('change', () => {
+          const selectedSeverities = Array.from(document.querySelectorAll('.severity-filter:checked'))
+            .map(cb => cb.value);
+          graph.filterBySeverity(selectedSeverities);
+        });
+      });
+      
+      // 搜索功能
+      const searchInput = document.getElementById('search-input');
+      const searchResults = document.getElementById('search-results');
+      
+      searchInput.addEventListener('input', debounce(function(e) {
+        const query = (e.target.value || '').trim().toLowerCase();
+        if (query.length < 2) {
+          searchResults.classList.add('hidden');
+          return;
+        }
+        
+        const results = graph.search(query);
+        displaySearchResults(results);
+      }, 300));
+      
+      function displaySearchResults(results) {
+        if (results.length === 0) {
+          searchResults.innerHTML = '<div class="p-3 text-sm text-gray-500">未找到相关结果</div>';
+        } else {
+          searchResults.innerHTML = results.slice(0, 10).map(node => `
+            <div class="search-result-item p-3 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0" data-id="${node.id}">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">${node.icon || '🔹'}</span>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm text-white font-medium truncate">${node.name}</div>
+                  <div class="text-xs text-gray-500">${node.domainName || ''} ${node.subcategoryName ? '· ' + node.subcategoryName : ''}</div>
+                </div>
+                ${node.severity ? `<span class="severity-badge severity-${node.severity}"></span>` : ''}
+              </div>
+            </div>
+          `).join('');
+          
+          // 添加点击事件
+          searchResults.querySelectorAll('.search-result-item').forEach(item => {
+            item.addEventListener('click', function() {
+              const nodeId = this.dataset.id;
+              graph.focusNode(nodeId);
+              searchResults.classList.add('hidden');
+              searchInput.value = '';
+            });
+          });
+        }
+        searchResults.classList.remove('hidden');
+      }
+      
+      // 点击外部关闭搜索结果
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#search-input') && !e.target.closest('#search-results')) {
+          searchResults.classList.add('hidden');
+        }
+      });
+      
+      // 防抖函数
+      function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
+      
+      // 键盘快捷键
+      document.addEventListener('keydown', (e) => {
+        // ESC 关闭面板
+        if (e.key === 'Escape') {
+          document.getElementById('detail-panel').classList.remove('active');
+          statsPanel.classList.add('hidden');
+          statsPanel.classList.remove('flex');
+          searchResults.classList.add('hidden');
+        }
+        
+        // / 聚焦搜索
+        if (e.key === '/' && document.activeElement !== searchInput) {
+          e.preventDefault();
+          searchInput.focus();
+        }
+      });
+      
+      console.log('✅ 应用初始化完成');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>功能测试 - ToastManager & NodeValidator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      font-family: 'Noto Sans SC', system-ui, sans-serif;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn {
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold text-white mb-8 text-center">功能测试页面</h1>
+    
+    <!-- ToastManager 测试 -->
+    <div class="glass rounded-2xl p-6 mb-6">
+      <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-sm">1</span>
+        ToastManager 测试
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <button onclick="testToast('success')" class="btn px-4 py-3 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400 hover:bg-green-500/30">
+          ✅ 成功通知
+        </button>
+        <button onclick="testToast('error')" class="btn px-4 py-3 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/30">
+          ❌ 错误通知
+        </button>
+        <button onclick="testToast('warning')" class="btn px-4 py-3 bg-yellow-500/20 border border-yellow-500/30 rounded-xl text-yellow-400 hover:bg-yellow-500/30">
+          ⚠️ 警告通知
+        </button>
+        <button onclick="testToast('info')" class="btn px-4 py-3 bg-blue-500/20 border border-blue-500/30 rounded-xl text-blue-400 hover:bg-blue-500/30">
+          ℹ️ 信息通知
+        </button>
+      </div>
+      <div class="mt-4 flex gap-4">
+        <button onclick="testMultipleToasts()" class="btn px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-400 hover:bg-purple-500/30 text-sm">
+          测试多个Toast
+        </button>
+        <button onclick="toastManager.clear()" class="btn px-4 py-2 bg-gray-500/20 border border-gray-500/30 rounded-lg text-gray-400 hover:bg-gray-500/30 text-sm">
+          清除所有
+        </button>
+      </div>
+    </div>
+
+    <!-- NodeValidator 测试 -->
+    <div class="glass rounded-2xl p-6 mb-6">
+      <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-sm">2</span>
+        NodeValidator 测试
+      </h2>
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button onclick="testValidNode()" class="btn px-4 py-3 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400 hover:bg-green-500/30">
+            ✅ 验证有效节点
+          </button>
+          <button onclick="testInvalidNode()" class="btn px-4 py-3 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/30">
+            ❌ 验证无效节点
+          </button>
+          <button onclick="testDuplicateNode()" class="btn px-4 py-3 bg-yellow-500/20 border border-yellow-500/30 rounded-xl text-yellow-400 hover:bg-yellow-500/30">
+            ⚠️ 测试重复ID
+          </button>
+        </div>
+        <div id="validation-result" class="mt-4 p-4 bg-slate-800/50 rounded-xl hidden">
+          <h3 class="font-semibold mb-2">验证结果：</h3>
+          <pre id="validation-output" class="text-sm text-gray-300 overflow-x-auto"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- GraphDataManager 测试 -->
+    <div class="glass rounded-2xl p-6 mb-6">
+      <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-sm">3</span>
+        GraphDataManager 测试
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button onclick="testAddNode()" class="btn px-4 py-3 bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-indigo-400 hover:bg-indigo-500/30">
+          ➕ 添加节点
+        </button>
+        <button onclick="testGenerateId()" class="btn px-4 py-3 bg-cyan-500/20 border border-cyan-500/30 rounded-xl text-cyan-400 hover:bg-cyan-500/30">
+          🎲 生成唯一ID
+        </button>
+        <button onclick="showNodeStats()" class="btn px-4 py-3 bg-pink-500/20 border border-pink-500/30 rounded-xl text-pink-400 hover:bg-pink-500/30">
+          📊 显示统计
+        </button>
+      </div>
+      <div id="manager-result" class="mt-4 p-4 bg-slate-800/50 rounded-xl hidden">
+        <h3 class="font-semibold mb-2">操作结果：</h3>
+        <pre id="manager-output" class="text-sm text-gray-300 overflow-x-auto"></pre>
+      </div>
+    </div>
+
+    <!-- 系统信息 -->
+    <div class="glass rounded-2xl p-6">
+      <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-sm">4</span>
+        系统信息
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="p-4 bg-slate-800/50 rounded-xl">
+          <div class="text-2xl font-bold text-indigo-400" id="node-count">0</div>
+          <div class="text-xs text-gray-500">节点数量</div>
+        </div>
+        <div class="p-4 bg-slate-800/50 rounded-xl">
+          <div class="text-2xl font-bold text-emerald-400" id="link-count">0</div>
+          <div class="text-xs text-gray-500">连接数量</div>
+        </div>
+        <div class="p-4 bg-slate-800/50 rounded-xl">
+          <div class="text-2xl font-bold text-amber-400" id="toast-count">0</div>
+          <div class="text-xs text-gray-500">Toast数量</div>
+        </div>
+        <div class="p-4 bg-slate-800/50 rounded-xl">
+          <div class="text-2xl font-bold text-cyan-400" id="test-status">✓</div>
+          <div class="text-xs text-gray-500">测试状态</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 返回应用 -->
+    <div class="mt-8 text-center">
+      <a href="app.html" class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 rounded-xl text-white transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        返回主应用
+      </a>
+    </div>
+  </div>
+
+  <!-- 模块导入 -->
+  <script type="module">
+    import { toastManager } from './src/modules/editor/ToastManager.js';
+    import { NodeValidator } from './src/utils/NodeValidator.js';
+    import { GraphDataManager } from './src/data/GraphDataManager.js';
+
+    // 暴露到全局以便按钮调用
+    window.toastManager = toastManager;
+    window.NodeValidator = NodeValidator;
+    window.GraphDataManager = GraphDataManager;
+
+    // 初始化数据管理器
+    const dataManager = new GraphDataManager();
+    window.dataManager = dataManager;
+
+    // 添加一些测试数据
+    dataManager.setData([
+      { id: 'test1', name: '测试节点1', type: 'domain', x: 0, y: 0, radius: 35, color: '#3b82f6' },
+      { id: 'test2', name: '测试节点2', type: 'problem', x: 100, y: 100, radius: 15, color: '#64748b', parent: 'test1' }
+    ], [
+      { source: 'test1', target: 'test2', type: 'hierarchy' }
+    ]);
+
+    // 更新统计
+    function updateStats() {
+      const stats = dataManager.getStatistics();
+      document.getElementById('node-count').textContent = stats.totalNodes;
+      document.getElementById('link-count').textContent = stats.totalLinks;
+      document.getElementById('toast-count').textContent = toastManager.toasts.length;
+    }
+    setInterval(updateStats, 500);
+
+    // Toast测试
+    window.testToast = (type) => {
+      const messages = {
+        success: { title: '操作成功', message: '节点已成功添加到图谱中' },
+        error: { title: '操作失败', message: '节点验证失败：名称不能为空' },
+        warning: { title: '警告', message: '颜色较深，可能影响文字可读性' },
+        info: { title: '提示', message: '您可以通过拖拽调整节点位置' }
+      };
+      const msg = messages[type];
+      toastManager[type](msg.message, msg.title);
+    };
+
+    window.testMultipleToasts = () => {
+      toastManager.info('第一条消息', '批量测试');
+      setTimeout(() => toastManager.success('第二条消息'), 200);
+      setTimeout(() => toastManager.warning('第三条消息'), 400);
+      setTimeout(() => toastManager.error('第四条消息'), 600);
+    };
+
+    // NodeValidator测试
+    const validator = new NodeValidator(dataManager.nodes);
+
+    window.testValidNode = () => {
+      const node = {
+        id: 'new-node-' + Date.now(),
+        name: '新测试节点',
+        type: 'problem',
+        description: '这是一个测试节点',
+        severity: 'medium',
+        parent: 'test1'
+      };
+      const result = validator.validate(node);
+      showValidationResult(result);
+    };
+
+    window.testInvalidNode = () => {
+      const node = {
+        id: '',
+        name: 'A',
+        type: 'invalid-type',
+        severity: 'invalid-severity'
+      };
+      const result = validator.validate(node);
+      showValidationResult(result);
+    };
+
+    window.testDuplicateNode = () => {
+      const node = {
+        id: 'test1',
+        name: '重复ID节点',
+        type: 'problem'
+      };
+      const result = validator.validate(node);
+      showValidationResult(result);
+    };
+
+    function showValidationResult(result) {
+      const resultDiv = document.getElementById('validation-result');
+      const output = document.getElementById('validation-output');
+      resultDiv.classList.remove('hidden');
+      output.textContent = JSON.stringify(result, null, 2);
+    }
+
+    // GraphDataManager测试
+    window.testAddNode = () => {
+      const node = {
+        id: 'manual-' + Date.now(),
+        name: '手动添加节点',
+        type: 'subcategory',
+        description: '通过测试页面添加',
+        severity: 'high',
+        parent: 'test1'
+      };
+      const result = dataManager.addNode(node);
+      showManagerResult(result);
+      
+      if (result.success) {
+        toastManager.success('节点添加成功！', '操作完成');
+      } else {
+        toastManager.error(result.errors.map(e => e.message).join('\n'), '添加失败');
+      }
+    };
+
+    window.testGenerateId = () => {
+      const id = dataManager.generateNodeId('test');
+      showManagerResult({ generatedId: id, existingNodes: dataManager.nodes.size });
+      toastManager.info(`生成的ID: ${id}`, 'ID生成');
+    };
+
+    window.showNodeStats = () => {
+      const stats = dataManager.getStatistics();
+      showManagerResult(stats);
+    };
+
+    function showManagerResult(result) {
+      const resultDiv = document.getElementById('manager-result');
+      const output = document.getElementById('manager-output');
+      resultDiv.classList.remove('hidden');
+      output.textContent = JSON.stringify(result, null, 2);
+    }
+
+    console.log('✅ 测试页面初始化完成');
+    console.log('📊 数据管理器:', dataManager);
+    console.log('🔔 Toast管理器:', toastManager);
+    console.log('✓ 验证器:', validator);
+  </script>
+</body>
+</html>

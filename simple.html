@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智识空间 - 人生八维知识管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #6366f1;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .main-content {
+            margin-top: 80px;
+            padding: 24px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .page-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+        
+        .dimension-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .dimension-card {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+            border-left: 4px solid;
+        }
+        
+        .dimension-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+        }
+        
+        .dimension-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+        
+        .dimension-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .dimension-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        
+        .dimension-stats {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dimension-count {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .dimension-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        
+        .card {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover {
+            background: var(--bg-secondary);
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .question-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .question-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .option-btn {
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+        
+        .option-btn:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .option-emoji {
+            font-size: 24px;
+        }
+        
+        .input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            margin-bottom: 16px;
+        }
+        
+        .input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .tag {
+            display: inline-flex;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        
+        .back-btn {
+            margin-bottom: 16px;
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .back-btn:hover {
+            background: var(--bg-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">📚 智识空间</div>
+    </header>
+    
+    <main class="main-content">
+        <!-- 首页 -->
+        <div id="home-page">
+            <h1 class="page-title">👋 欢迎回来</h1>
+            <p class="page-subtitle">人生八维，全面成长。选择一个维度开始探索吧。</p>
+            
+            <div class="dimension-grid" id="dimension-grid">
+                <!-- 维度卡片将通过JS生成 -->
+            </div>
+        </div>
+        
+        <!-- 维度详情页 -->
+        <div id="dimension-page" class="hidden">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <h1 class="page-title" id="dimension-title"></h1>
+            <p class="page-subtitle" id="dimension-subtitle"></p>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('guide')">💡 启发引导</button>
+                <button class="tab" onclick="switchTab('knowledge')">📚 知识库</button>
+                <button class="tab" onclick="switchTab('notes')">📝 我的笔记</button>
+            </div>
+            
+            <div id="tab-guide">
+                <div class="card">
+                    <div class="card-title">开启探索之旅</div>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                        通过一系列启发式问题，帮助你深入思考这个维度的现状和目标。
+                    </p>
+                    <button class="btn btn-primary" onclick="startHeuristic()">开始探索</button>
+                </div>
+                
+                <div id="heuristic-container"></div>
+            </div>
+            
+            <div id="tab-knowledge" class="hidden">
+                <div class="card">
+                    <div class="card-title">📖 经典理论</div>
+                    <div id="theories-content"></div>
+                </div>
+            </div>
+            
+            <div id="tab-notes" class="hidden">
+                <button class="btn btn-primary" onclick="createNote()" style="margin-bottom: 20px;">
+                    + 创建笔记
+                </button>
+                <div id="notes-list"></div>
+            </div>
+        </div>
+        
+        <!-- 笔记编辑器 -->
+        <div id="editor-page" class="hidden">
+            <button class="back-btn" onclick="showDimension()">← 返回</button>
+            <h1 class="page-title">📝 新建笔记</h1>
+            
+            <div class="card">
+                <input type="text" class="input" id="note-title" placeholder="输入标题...">
+                <textarea class="input textarea" id="note-content" placeholder="开始记录你的想法..."></textarea>
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">关联维度：</div>
+                    <div id="dimension-tags"></div>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="btn" onclick="showDimension()" style="background: var(--bg-secondary);">取消</button>
+                    <button class="btn btn-primary" onclick="saveNote()">保存笔记</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ==================== 数据 ====================
+        const LIFE_DIMENSIONS = {
+            HEALTH: {
+                id: 'health',
+                name: '健康',
+                icon: '❤️',
+                color: '#FF6B6B',
+                bgColor: '#FFF5F5',
+                description: '身体健康与心理平衡',
+                pillar: '生命的基石',
+                questions: [
+                    {
+                        question: '最近一周，你的身体和心理状态如何？',
+                        options: [
+                            { value: 'excellent', label: '精力充沛，状态很好', emoji: '💪' },
+                            { value: 'good', label: '总体不错，偶尔疲惫', emoji: '🙂' },
+                            { value: 'fair', label: '一般般，有些小毛病', emoji: '😐' },
+                            { value: 'poor', label: '不太好，需要调整', emoji: '😔' }
+                        ]
+                    }
+                ],
+                theories: [
+                    {
+                        title: '精力管理金字塔',
+                        content: '精力管理包含四个层次：体能精力、情绪精力、思维精力、意志精力。'
+                    },
+                    {
+                        title: '睡眠周期理论',
+                        content: '每个睡眠周期90分钟，每晚需要4-5个周期（6-7.5小时）。'
+                    }
+                ]
+            },
+            CAREER: {
+                id: 'career',
+                name: '事业',
+                icon: '💼',
+                color: '#4ECDC4',
+                bgColor: '#E8F8F7',
+                description: '职业发展与工作成就',
+                pillar: '价值的实现',
+                questions: [
+                    {
+                        question: '目前的工作让你感到充实吗？',
+                        options: [
+                            { value: 'very', label: '非常充实，充满热情', emoji: '🔥' },
+                            { value: 'somewhat', label: '还算满意，有成就感', emoji: '✨' },
+                            { value: 'neutral', label: '一般，按部就班', emoji: '📋' },
+                            { value: 'dissatisfied', label: '不太满意，想改变', emoji: '🤔' }
+                        ]
+                    }
+                ],
+                theories: [
+                    {
+                        title: 'OKR目标管理法',
+                        content: 'Objectives & Key Results：目标要有挑战性，关键结果要具体可衡量。'
+                    }
+                ]
+            },
+            FINANCE: {
+                id: 'finance',
+                name: '财务',
+                icon: '💰',
+                color: '#45B7D1',
+                bgColor: '#E8F4F8',
+                description: '财富积累与财务自由',
+                pillar: '安全的保障',
+                questions: [
+                    {
+                        question: '你对自己的财务状况满意吗？',
+                        options: [
+                            { value: 'secure', label: '财务安全，有盈余', emoji: '🛡️' },
+                            { value: 'stable', label: '收支平衡，还算稳定', emoji: '⚖️' },
+                            { value: 'tight', label: '有些紧张，需要规划', emoji: '📊' },
+                            { value: 'concerned', label: '比较担忧，急需改善', emoji: '⚠️' }
+                        ]
+                    }
+                ],
+                theories: [
+                    {
+                        title: '50/30/20法则',
+                        content: '50%需要（房租、食物）、30%想要（娱乐）、20%储蓄投资。'
+                    }
+                ]
+            },
+            FAMILY: {
+                id: 'family',
+                name: '家庭',
+                icon: '🏠',
+                color: '#F9CA24',
+                bgColor: '#FEF9E7',
+                description: '亲情维系与家庭和谐',
+                pillar: '情感的港湾',
+                questions: [
+                    {
+                        question: '最近和家人的关系如何？',
+                        options: [
+                            { value: 'harmonious', label: '非常融洽，充满温暖', emoji: '❤️' },
+                            { value: 'good', label: '关系不错，偶有摩擦', emoji: '👨‍👩‍👧' },
+                            { value: 'distant', label: '有些疏远，需要沟通', emoji: '📞' },
+                            { value: 'strained', label: '关系紧张，需要修复', emoji: '💔' }
+                        ]
+                    }
+                ],
+                theories: [
+                    {
+                        title: '爱的五种语言',
+                        content: '肯定的言辞、服务的行动、接受礼物、高质量时间、身体接触。'
+                    }
+                ]
+            },
+            SOCIAL: {
+                id: 'social',
+                name: '社交',
+                icon: '🤝',
+                color: '#A29BFE',
+                bgColor: '#F3F1FF',
+                description: '人脉拓展与社会连接',
+                pillar: '支持的网路',
+                questions: [
+                    {
+                        question: '你的社交圈让你感到满足吗？',
+                        options: [
+                            { value: 'rich', label: '朋友众多，关系深厚', emoji: '🌟' },
+                            { value: 'adequate', label: '有几个知心好友', emoji: '🤝' },
+                            { value: 'limited', label: '圈子较小，想拓展', emoji: '🌱' },
+                            { value: 'lonely', label: '感到孤独，需要连接', emoji: '💭' }
+                        ]
+                    }
+                ],
+                theories: [
+                    {
+                        title: '弱连接的力量',
+                        content: '新机会往往来自弱连接，而非亲密好友。'
+                    }
+                ]
+            },
+            LEARNING: {
+                id: 'learning',
+                name: '学习',
+                icon: '📚',
+                color: '#FD79A8',
+                bgColor: '#FFF0F5',
+                description: '知识获取与能力提升',
+                pillar: '成长的阶梯',
+                questions: [
+                    {
+                        question: '你最近在学习什么新东西吗？',
+                        options: [
+                            { value: 'actively', label: '正在积极学习新技能', emoji: '📖' },
+                            { value: 'occasionally', label: '偶尔学习，保持好奇', emoji: '🔍' },
+                            { value: 'planning', label: '有计划，还没开始', emoji: '📅' },
+                            { value: 'stagnant', label: '很久没有学习了', emoji: '⏸️' }
+                        ]
+                    }
+                ],
+                theories: [
+                    {
+                        title: '费曼学习法',
+                        content: '选择概念、教授他人、发现缺口、简化语言。'
+                    }
+                ]
+            },
+            ENTERTAINMENT: {
+                id: 'entertainment',
+                name: '娱乐',
+                icon: '🎮',
+                color: '#FDCB6E',
+                bgColor: '#FFF9E6',
+                description: '兴趣爱好与生活乐趣',
+                pillar: '快乐的源泉',
+                questions: [
+                    {
+                        question: '你的生活有足够乐趣吗？',
+                        options: [
+                            { value: 'abundant', label: '生活丰富，乐趣多多', emoji: '🎉' },
+                            { value: 'balanced', label: '工作与娱乐平衡', emoji: '⚖️' },
+                            { value: 'lacking', label: '有点单调，需要调剂', emoji: '🎨' },
+                            { value: 'burnout', label: '工作太忙，没时间玩', emoji: '😫' }
+                        ]
+                    }
+                ],
+                theories: [
+                    {
+                        title: '心流理论',
+                        content: '挑战与技能平衡、明确目标、即时反馈、深度专注。'
+                    }
+                ]
+            },
+            SPIRITUAL: {
+                id: 'spiritual',
+                name: '精神',
+                icon: '🧘',
+                color: '#6C5CE7',
+                bgColor: '#F0EEFC',
+                description: '内心平静与人生意义',
+                pillar: '灵魂的归宿',
+                questions: [
+                    {
+                        question: '你的内心平静吗？有人生方向感吗？',
+                        options: [
+                            { value: 'peaceful', label: '内心平静，方向清晰', emoji: '🕊️' },
+                            { value: 'searching', label: '正在探索，有所感悟', emoji: '🌅' },
+                            { value: 'confused', label: '有些迷茫，需要思考', emoji: '🌊' },
+                            { value: 'lost', label: '感到迷失，急需指引', emoji: '🌑' }
+                        ]
+                    }
+                ],
+                theories: [
+                    {
+                        title: '意义疗法',
+                        content: '通过创造、体验、态度来找到人生意义。'
+                    }
+                ]
+            }
+        };
+
+        // ==================== 状态 ====================
+        let currentDimension = null;
+        let currentTab = 'guide';
+        let notes = JSON.parse(localStorage.getItem('ks_notes') || '[]');
+
+        // ==================== 函数 ====================
+        function init() {
+            renderDimensionCards();
+        }
+
+        function renderDimensionCards() {
+            const grid = document.getElementById('dimension-grid');
+            grid.innerHTML = '';
+            
+            Object.values(LIFE_DIMENSIONS).forEach(dim => {
+                const count = notes.filter(n => n.dimensions.includes(dim.id)).length;
+                
+                const card = document.createElement('div');
+                card.className = 'dimension-card';
+                card.style.borderLeftColor = dim.color;
+                card.onclick = () => showDimension(dim.id);
+                
+                card.innerHTML = `
+                    <div class="dimension-icon">${dim.icon}</div>
+                    <div class="dimension-name">${dim.name}</div>
+                    <div class="dimension-desc">${dim.description}</div>
+                    <div class="dimension-stats">
+                        <div class="dimension-count" style="color: ${dim.color}">${count}</div>
+                        <div class="dimension-label">篇笔记</div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        function showDimension(dimensionId) {
+            currentDimension = LIFE_DIMENSIONS[Object.keys(LIFE_DIMENSIONS).find(
+                k => LIFE_DIMENSIONS[k].id === dimensionId
+            )];
+            
+            document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('dimension-page').classList.remove('hidden');
+            document.getElementById('editor-page').classList.add('hidden');
+            
+            document.getElementById('dimension-title').textContent = 
+                currentDimension.icon + ' ' + currentDimension.name;
+            document.getElementById('dimension-subtitle').textContent = 
+                currentDimension.description + ' · ' + currentDimension.pillar;
+            
+            renderTheories();
+            renderNotes();
+            switchTab('guide');
+        }
+
+        function showHome() {
+            document.getElementById('home-page').classList.remove('hidden');
+            document.getElementById('dimension-page').classList.add('hidden');
+            document.getElementById('editor-page').classList.add('hidden');
+            renderDimensionCards();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 更新标签样式
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 显示对应内容
+            ['guide', 'knowledge', 'notes'].forEach(t => {
+                document.getElementById('tab-' + t).classList.add('hidden');
+            });
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+        }
+
+        function startHeuristic() {
+            const container = document.getElementById('heuristic-container');
+            const question = currentDimension.questions[0];
+            
+            let html = `
+                <div class="question-card">
+                    <div class="question-title">${question.question}</div>
+                    <div class="options">
+            `;
+            
+            question.options.forEach(opt => {
+                html += `
+                    <button class="option-btn" onclick="handleAnswer('${opt.value}')">
+                        <span class="option-emoji">${opt.emoji}</span>
+                        <span>${opt.label}</span>
+                    </button>
+                `;
+            });
+            
+            html += '</div></div>';
+            container.innerHTML = html;
+        }
+
+        function handleAnswer(value) {
+            const advices = {
+                excellent: '太棒了！保持这种良好的状态。建议记录你的健康习惯，形成可复制的经验。',
+                good: '整体不错！建议识别并改善1-2个小问题，建立更规律的作息。',
+                fair: '需要关注了。建议从睡眠入手，固定作息时间，每天增加15分钟运动。',
+                poor: '急需改善！建议立即预约体检，寻求专业医生帮助，从最小改变开始。',
+                very: '职业发展很好！建议培养团队领导力，分享经验建立个人品牌。',
+                somewhat: '还算满意。建议找出工作中最有成就感的部分，主动争取有挑战的项目。',
+                secure: '财务状况健康！建议优化投资组合，考虑长期财务目标。',
+                stable: '基本稳定。建议建立3-6个月应急基金，开始定期投资。'
+            };
+            
+            alert('基于你的回答：\n\n' + (advices[value] || '继续保持觉察，持续改进。'));
+        }
+
+        function renderTheories() {
+            const container = document.getElementById('theories-content');
+            container.innerHTML = currentDimension.theories.map(t => `
+                <div style="margin-bottom: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">${t.title}</div>
+                    <div style="color: var(--text-secondary); font-size: 14px;">${t.content}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notes-list');
+            const dimNotes = notes.filter(n => n.dimensions.includes(currentDimension.id));
+            
+            if (dimNotes.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px; color: var(--text-secondary);">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+                        <div style="font-size: 18px; margin-bottom: 8px;">还没有笔记</div>
+                        <div>开始记录你的${currentDimension.name}思考和成长吧</div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = dimNotes.map(n => `
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 8px;">${n.title || '无标题'}</div>
+                        <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">
+                            ${n.content.substring(0, 100)}...
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-tertiary);">
+                            ${new Date(n.updatedAt).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function createNote() {
+            document.getElementById('dimension-page').classList.add('hidden');
+            document.getElementById('editor-page').classList.remove('hidden');
+            
+            // 渲染维度标签
+            const tagsContainer = document.getElementById('dimension-tags');
+            tagsContainer.innerHTML = Object.values(LIFE_DIMENSIONS).map(dim => `
+                <span class="tag" style="background: ${dim.bgColor}; color: ${dim.color}; border: 2px solid ${currentDimension.id === dim.id ? dim.color : 'transparent'}" 
+                      onclick="toggleDimensionTag(this, '${dim.id}')">
+                    ${dim.icon} ${dim.name}
+                </span>
+            `).join('');
+            
+            // 默认选中当前维度
+            window.selectedDimensions = [currentDimension.id];
+        }
+
+        function toggleDimensionTag(element, dimId) {
+            if (window.selectedDimensions.includes(dimId)) {
+                window.selectedDimensions = window.selectedDimensions.filter(id => id !== dimId);
+                element.style.borderColor = 'transparent';
+            } else {
+                window.selectedDimensions.push(dimId);
+                const dim = Object.values(LIFE_DIMENSIONS).find(d => d.id === dimId);
+                element.style.borderColor = dim.color;
+            }
+        }
+
+        function saveNote() {
+            const title = document.getElementById('note-title').value;
+            const content = document.getElementById('note-content').value;
+            
+            if (!title.trim()) {
+                alert('请输入标题');
+                return;
+            }
+            
+            const note = {
+                id: Date.now().toString(),
+                title: title,
+                content: content,
+                dimensions: window.selectedDimensions || [currentDimension.id],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            notes.push(note);
+            localStorage.setItem('ks_notes', JSON.stringify(notes));
+            
+            // 清空表单
+            document.getElementById('note-title').value = '';
+            document.getElementById('note-content').value = '';
+            
+            showDimension(currentDimension.id);
+        }
+
+        // 初始化
+        init();
+    </script>
+</body>
+</html>

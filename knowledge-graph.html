@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>00后人生问题知识图谱 - 智识空间</title>
+    <link rel="stylesheet" href="./styles/graph-styles.css">
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <!-- 粒子背景画布 -->
+    <canvas id="particles-canvas"></canvas>
+    
+    <!-- 加载动画 -->
+    <div id="loading" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">正在构建知识图谱...</div>
+    </div>
+    
+    <!-- 提示框 -->
+    <div id="tooltip" class="tooltip"></div>
+    
+    <!-- 头部导航 -->
+    <header class="graph-header">
+        <div class="graph-logo">
+            <span class="graph-logo-icon">🧠</span>
+            <span>00后人生问题知识图谱</span>
+        </div>
+        <nav class="graph-nav">
+            <button class="nav-btn active" data-mode="network">
+                <span>🕸️</span>
+                <span>网络视图</span>
+            </button>
+            <button class="nav-btn" data-mode="radial">
+                <span>🎯</span>
+                <span>径向视图</span>
+            </button>
+        </nav>
+    </header>
+    
+    <!-- 主容器 -->
+    <div class="graph-container">
+        <!-- 侧边栏 -->
+        <aside class="graph-sidebar">
+            <!-- 搜索 -->
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-input" placeholder="搜索问题、维度...">
+            </div>
+            
+            <!-- 统计 -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">📊 概览统计</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">维度</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">40</div>
+                        <div class="stat-label">问题</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">18</div>
+                        <div class="stat-label">高危</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">方案</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 维度列表 -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">🎯 人生维度</div>
+                <div class="dimension-list">
+                    <div class="dimension-item active" data-id="career">
+                        <div class="dimension-icon" style="background: rgba(78, 205, 196, 0.2); color: #4ECDC4;">💼</div>
+                        <div class="dimension-info">
+                            <div class="dimension-name">职业发展</div>
+                            <div class="dimension-count">5 个问题</div>
+                        </div>
+                    </div>
+                    <div class="dimension-item active" data-id="finance">
+                        <div class="dimension-icon" style="background: rgba(69, 183, 209, 0.2); color: #45B7D1;">💰</div>
+                        <div class="dimension-info">
+                            <div class="dimension-name">财务压力</div>
+                            <div class="dimension-count">4 个问题</div>
+                        </div>
+                    </div>
+                    <div class="dimension-item active" data-id="relationship">
+                        <div class="dimension-icon" style="background: rgba(162, 155, 254, 0.2); color: #A29BFE;">🤝</div>
+                        <div class="dimension-info">
+                            <div class="dimension-name">人际关系</div>
+                            <div class="dimension-count">4 个问题</div>
+                        </div>
+                    </div>
+                    <div class="dimension-item active" data-id="emotion">
+                        <div class="dimension-icon" style="background: rgba(253, 121, 168, 0.2); color: #FD79A8;">💕</div>
+                        <div class="dimension-info">
+                            <div class="dimension-name">情感困惑</div>
+                            <div class="dimension-count">4 个问题</div>
+                        </div>
+                    </div>
+                    <div class="dimension-item active" data-id="identity">
+                        <div class="dimension-icon" style="background: rgba(253, 203, 110, 0.2); color: #FDCB6E;">🪞</div>
+                        <div class="dimension-info">
+                            <div class="dimension-name">自我认知</div>
+                            <div class="dimension-count">4 个问题</div>
+                        </div>
+                    </div>
+                    <div class="dimension-item active" data-id="family">
+                        <div class="dimension-icon" style="background: rgba(249, 202, 36, 0.2); color: #F9CA24;">🏠</div>
+                        <div class="dimension-info">
+                            <div class="dimension-name">家庭关系</div>
+                            <div class="dimension-count">4 个问题</div>
+                        </div>
+                    </div>
+                    <div class="dimension-item active" data-id="health">
+                        <div class="dimension-icon" style="background: rgba(255, 107, 107, 0.2); color: #FF6B6B;">❤️</div>
+                        <div class="dimension-info">
+                            <div class="dimension-name">身心健康</div>
+                            <div class="dimension-count">4 个问题</div>
+                        </div>
+                    </div>
+                    <div class="dimension-item active" data-id="meaning">
+                        <div class="dimension-icon" style="background: rgba(108, 92, 231, 0.2); color: #6C5CE7;">🧘</div>
+                        <div class="dimension-info">
+                            <div class="dimension-name">生活意义</div>
+                            <div class="dimension-count">4 个问题</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 严重程度过滤 -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">⚡ 严重程度</div>
+                <div class="filter-group">
+                    <div class="filter-item active" data-severity="high">
+                        <div class="filter-checkbox"></div>
+                        <span class="filter-label">高风险 (18)</span>
+                    </div>
+                    <div class="filter-item active" data-severity="medium">
+                        <div class="filter-checkbox"></div>
+                        <span class="filter-label">中风险 (16)</span>
+                    </div>
+                    <div class="filter-item active" data-severity="low">
+                        <div class="filter-checkbox"></div>
+                        <span class="filter-label">低风险 (6)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 使用说明 -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">💡 使用提示</div>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                    <p>• 拖拽节点调整位置</p>
+                    <p>• 滚轮缩放视图</p>
+                    <p>• 点击节点查看详情</p>
+                    <p>• 悬停查看快速预览</p>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 可视化区域 -->
+        <div class="visualization-area" id="graph-container">
+            <!-- 工具栏 -->
+            <div class="toolbar">
+                <button class="toolbar-btn" id="zoom-in" title="放大">➕</button>
+                <button class="toolbar-btn" id="zoom-out" title="缩小">➖</button>
+                <button class="toolbar-btn" id="zoom-reset" title="重置">⟲</button>
+                <button class="toolbar-btn" id="toggle-sidebar" title="切换侧边栏">☰</button>
+            </div>
+            
+            <!-- 图例 -->
+            <div class="legend">
+                <div class="legend-title">图例说明</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #6366f1; width: 16px; height: 16px;"></div>
+                        <span>核心主题</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #4ECDC4;"></div>
+                        <span>维度节点</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #ef4444;"></div>
+                        <span>问题节点</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #22c55e;"></div>
+                        <span>解决方案</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background: #6366f1; height: 3px;"></div>
+                        <span>核心关联</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background: #ef4444;"></div>
+                        <span>因果关系</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background: #22c55e;"></div>
+                        <span>解决方案</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 详情面板 -->
+        <div id="detail-panel" class="detail-panel">
+            <button id="detail-close" class="detail-close">×</button>
+            <div id="detail-content">
+                <!-- 动态内容 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 数据文件 -->
+    <script src="./js/graph-data.js"></script>
+    <!-- 可视化逻辑 -->
+    <script src="./js/graph-visualization.js"></script>
+</body>
+</html>

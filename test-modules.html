@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>模块加载测试</title>
+</head>
+<body>
+  <h1>模块加载测试</h1>
+  <div id="status">测试中...</div>
+  
+  <script type="module">
+    const status = document.getElementById('status');
+    
+    try {
+      status.innerHTML += '<br>1. 导入 EventBus...';
+      const { EventBus } = await import('./src/core/EventBus.js');
+      status.innerHTML += ' ✓';
+      
+      status.innerHTML += '<br>2. 导入 StateManager...';
+      const { StateManager } = await import('./src/core/StateManager.js');
+      status.innerHTML += ' ✓';
+      
+      status.innerHTML += '<br>3. 导入 GraphDataManager...';
+      const { GraphDataManager } = await import('./src/data/GraphDataManager.js');
+      status.innerHTML += ' ✓';
+      
+      status.innerHTML += '<br>4. 导入 DataLoader...';
+      const { DataLoader } = await import('./src/data/DataLoader.js');
+      status.innerHTML += ' ✓';
+      
+      status.innerHTML += '<br>5. 导入 SearchEngine...';
+      const { SearchEngine } = await import('./src/modules/search/SearchEngine.js');
+      status.innerHTML += ' ✓';
+      
+      status.innerHTML += '<br>6. 导入 CanvasRenderer...';
+      const { CanvasRenderer } = await import('./src/modules/visualization/CanvasRenderer.js');
+      status.innerHTML += ' ✓';
+      
+      status.innerHTML += '<br>7. 导入 ForceLayout...';
+      const { ForceLayout } = await import('./src/modules/visualization/ForceLayout.js');
+      status.innerHTML += ' ✓';
+      
+      status.innerHTML += '<br>8. 导入 ExportManager...';
+      const { ExportManager } = await import('./src/modules/export/ExportManager.js');
+      status.innerHTML += ' ✓';
+      
+      status.innerHTML += '<br><br><strong>所有模块加载成功！</strong>';
+      
+      // 测试实例化
+      status.innerHTML += '<br><br>测试实例化...';
+      const eventBus = new EventBus();
+      const dataManager = new GraphDataManager();
+      const searchEngine = new SearchEngine();
+      status.innerHTML += ' ✓';
+      
+    } catch (error) {
+      status.innerHTML += `<br><br><strong style="color: red;">错误: ${error.message}</strong>`;
+      console.error(error);
+    }
+  </script>
+</body>
+</html>

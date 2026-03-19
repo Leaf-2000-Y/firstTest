@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>数据加载测试</title>
+</head>
+<body>
+  <h1>数据加载测试</h1>
+  <div id="status">加载中...</div>
+  
+  <script src="js/comprehensive-data.js"></script>
+  <script src="js/additional-domains.js"></script>
+  
+  <script type="module">
+    import { DataLoader } from './src/data/DataLoader.js';
+    
+    const status = document.getElementById('status');
+    
+    try {
+      status.innerHTML += '<br>1. 创建 DataLoader...';
+      const loader = new DataLoader();
+      status.innerHTML += ' ✓';
+      
+      // 测试 comprehensive-data.js
+      if (typeof ComprehensiveData !== 'undefined') {
+        status.innerHTML += '<br>2. 加载 ComprehensiveData...';
+        const result1 = loader.loadInlineData(ComprehensiveData, { merge: false });
+        status.innerHTML += ` ✓ (${result1.nodeCount} 节点, ${result1.linkCount} 连接)`;
+      }
+      
+      // 测试 additional-domains.js
+      if (typeof additionalDomains !== 'undefined') {
+        status.innerHTML += '<br>3. 加载 additionalDomains...';
+        const result2 = loader.loadInlineData(additionalDomains, { merge: true });
+        status.innerHTML += ` ✓ (${result2.nodeCount} 节点, ${result2.linkCount} 连接)`;
+      }
+      
+      status.innerHTML += '<br><br><strong>所有数据加载成功！</strong>';
+      
+    } catch (error) {
+      status.innerHTML += `<br><br><strong style="color: red;">错误: ${error.message}</strong>`;
+      console.error(error);
+    }
+  </script>
+</body>
+</html>

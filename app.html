@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>00后人生问题知识图谱 - 应用级优化版</title>
+  <meta name="description" content="全面解析当代年轻人面临的成长挑战，应用级架构优化，支持高性能渲染和智能搜索">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Noto Sans SC', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            primary: '#6366f1',
+            secondary: '#8b5cf6',
+            accent: '#ec4899',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    body {
+      font-family: 'Noto Sans SC', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      color: #e2e8f0;
+    }
+    
+    /* 加载动画 */
+    .loader {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(99, 102, 241, 0.3);
+      border-radius: 50%;
+      border-top-color: #6366f1;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 玻璃态效果 */
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .glass-strong {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    
+    /* 滚动条 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #6366f1, #8b5cf6);
+      border-radius: 3px;
+    }
+    
+    /* Canvas 容器 */
+    #canvas-container {
+      position: absolute;
+      top: 64px;
+      left: 256px;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+    }
+    
+    @media (max-width: 1024px) {
+      #canvas-container {
+        left: 0;
+      }
+    }
+    
+    /* 搜索高亮 */
+    mark {
+      background: linear-gradient(120deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    
+    /* 性能监控面板 */
+    .perf-panel {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+    
+    /* 节点详情面板动画 */
+    .panel-enter {
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    /* 搜索建议下拉 */
+    .search-suggestions {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .suggestion-item:hover {
+      background: rgba(99, 102, 241, 0.2);
+    }
+    
+    /* 侧边栏 */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 64px;
+      bottom: 0;
+      width: 256px;
+      z-index: 30;
+      transition: transform 0.3s ease;
+    }
+    
+    @media (max-width: 1024px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .sidebar.open {
+        transform: translateX(0);
+      }
+    }
+    
+    /* 严重程度标记 */
+    .severity-critical { background: #ef4444; }
+    .severity-high { background: #f97316; }
+    .severity-medium { background: #eab308; }
+    .severity-low { background: #22c55e; }
+    
+    /* Canvas 样式 */
+    canvas {
+      display: block;
+      cursor: grab;
+    }
+    
+    canvas:active {
+      cursor: grabbing;
+    }
+    
+    canvas.node-hover {
+      cursor: pointer;
+    }
+    
+    /* 展开/收起动画 */
+    .expand-indicator {
+      transition: transform 0.2s ease;
+    }
+    
+    .expand-indicator.expanded {
+      transform: rotate(90deg);
+    }
+    
+    /* 节点详情内容样式 */
+    .detail-section {
+      margin-bottom: 1rem;
+    }
+    
+    .detail-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+    
+    .detail-content {
+      font-size: 0.875rem;
+      color: #e2e8f0;
+      line-height: 1.5;
+    }
+    
+    /* 解决方案列表 */
+    .solution-item {
+      background: rgba(99, 102, 241, 0.1);
+      border-left: 3px solid #6366f1;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+    
+    /* 案例卡片 */
+    .case-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .case-title {
+      font-weight: 600;
+      color: #fbbf24;
+      margin-bottom: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- 加载界面 -->
+  <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900">
+    <div class="loader mb-6"></div>
+    <h1 class="text-2xl font-bold text-white mb-2">00后人生问题知识图谱</h1>
+    <p class="text-gray-400 text-sm mb-4">应用级优化版 v3.0</p>
+    <div class="text-xs text-gray-500 space-y-1 text-center">
+      <p id="loading-status">初始化核心框架...</p>
+      <p class="text-gray-600">高性能 Canvas 渲染引擎 | 智能搜索 | 模块化架构</p>
+    </div>
+  </div>
+
+  <!-- 主应用容器 -->
+  <div id="app" class="w-full h-full relative">
+    <!-- 顶部导航栏 -->
+    <header class="fixed top-0 left-0 right-0 h-16 glass z-40 flex items-center justify-between px-4">
+      <div class="flex items-center gap-3">
+        <button id="menu-toggle" class="lg:hidden p-2 rounded-lg hover:bg-white/10 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
+            知
+          </div>
+          <span class="font-semibold text-white hidden sm:block">知识图谱</span>
+        </div>
+      </div>
+      
+      <!-- 智能搜索框 -->
+      <div class="flex-1 max-w-xl mx-4 relative">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="search-input"
+            placeholder="搜索问题、症状、解决方案..." 
+            class="w-full px-4 py-2 pl-10 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+            autocomplete="off"
+          >
+          <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <div id="search-stats" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 hidden"></div>
+        </div>
+        
+        <!-- 搜索建议下拉框 -->
+        <div id="search-suggestions" class="search-suggestions absolute top-full left-0 right-0 mt-2 glass-strong rounded-xl hidden overflow-hidden z-50">
+        </div>
+        
+        <!-- 搜索结果下拉框 -->
+        <div id="search-results" class="search-suggestions absolute top-full left-0 right-0 mt-2 glass-strong rounded-xl hidden overflow-hidden max-h-96 z-50">
+        </div>
+      </div>
+      
+      <!-- 右侧工具栏 -->
+      <div class="flex items-center gap-2">
+        <button id="layout-toggle-btn" class="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="启用力导向布局">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+          </svg>
+        </button>
+        
+        <button id="reset-view-btn" class="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="重置视图">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+        
+        <button id="expand-all-btn" class="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="展开全部">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+          </svg>
+        </button>
+        
+        <button id="collapse-all-btn" class="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="收起全部">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+          </svg>
+        </button>
+        
+        <div class="w-px h-6 bg-white/20 mx-1"></div>
+        
+        <button id="export-btn" class="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="导出图片">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </button>
+        
+        <button id="perf-toggle" class="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="性能监控">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </button>
+        
+        <button id="fullscreen-btn" class="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="全屏">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 左侧边栏 -->
+    <aside id="sidebar" class="sidebar glass overflow-y-auto p-4">
+      <!-- 领域筛选 -->
+      <div class="mb-6">
+        <h3 class="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+          </svg>
+          领域筛选
+        </h3>
+        <div class="space-y-2" id="domain-filters">
+        </div>
+      </div>
+      
+      <!-- 严重程度筛选 -->
+      <div class="mb-6">
+        <h3 class="text-sm font-semibold text-white mb-3">严重程度</h3>
+        <div class="space-y-2" id="severity-filters">
+          <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+            <input type="checkbox" class="severity-filter rounded border-gray-600 text-red-500 focus:ring-red-500" value="critical" checked>
+            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+            严重
+          </label>
+          <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+            <input type="checkbox" class="severity-filter rounded border-gray-600 text-orange-500 focus:ring-orange-500" value="high" checked>
+            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+            高
+          </label>
+          <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+            <input type="checkbox" class="severity-filter rounded border-gray-600 text-yellow-500 focus:ring-yellow-500" value="medium" checked>
+            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+            中
+          </label>
+          <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+            <input type="checkbox" class="severity-filter rounded border-gray-600 text-green-500 focus:ring-green-500" value="low" checked>
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            低
+          </label>
+        </div>
+      </div>
+      
+      <!-- 统计信息 -->
+      <div class="glass rounded-xl p-4">
+        <h3 class="text-sm font-semibold text-white mb-3">数据统计</h3>
+        <div class="grid grid-cols-2 gap-3 text-center">
+          <div class="bg-white/5 rounded-lg p-2">
+            <div class="text-lg font-bold text-indigo-400" id="stat-total">0</div>
+            <div class="text-xs text-gray-500">总节点</div>
+          </div>
+          <div class="bg-white/5 rounded-lg p-2">
+            <div class="text-lg font-bold text-emerald-400" id="stat-visible">0</div>
+            <div class="text-xs text-gray-500">可见</div>
+          </div>
+          <div class="bg-white/5 rounded-lg p-2">
+            <div class="text-lg font-bold text-amber-400" id="stat-links">0</div>
+            <div class="text-xs text-gray-500">连接</div>
+          </div>
+          <div class="bg-white/5 rounded-lg p-2">
+            <div class="text-lg font-bold text-cyan-400" id="stat-fps">0</div>
+            <div class="text-xs text-gray-500">FPS</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 主画布区域 -->
+    <main id="canvas-container">
+    </main>
+
+    <!-- 性能监控面板 -->
+    <div id="perf-panel" class="perf-panel fixed bottom-4 right-4 glass-strong rounded-xl p-4 hidden z-40 w-64">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-xs font-semibold text-white">性能监控</h3>
+        <button id="perf-close" class="text-gray-500 hover:text-white">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="space-y-2 text-gray-400">
+        <div class="flex justify-between">
+          <span>FPS:</span>
+          <span id="perf-fps" class="text-green-400">--</span>
+        </div>
+        <div class="flex justify-between">
+          <span>节点数:</span>
+          <span id="perf-nodes">--</span>
+        </div>
+        <div class="flex justify-between">
+          <span>可见节点:</span>
+          <span id="perf-visible">--</span>
+        </div>
+        <div class="flex justify-between">
+          <span>展开节点:</span>
+          <span id="perf-expanded">--</span>
+        </div>
+        <div class="flex justify-between">
+          <span>缩放级别:</span>
+          <span id="perf-zoom">--</span>
+        </div>
+        <div class="flex justify-between">
+          <span>内存使用:</span>
+          <span id="perf-memory">--</span>
+        </div>
+        <div class="flex justify-between">
+          <span>搜索耗时:</span>
+          <span id="perf-search">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 节点详情面板 -->
+    <div id="detail-panel" class="fixed right-4 top-20 bottom-4 w-96 glass-strong rounded-2xl transform translate-x-full transition-transform duration-300 z-40 overflow-hidden">
+      <div class="h-full flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-white/10">
+          <h2 id="detail-title" class="text-lg font-semibold text-white">节点详情</h2>
+          <div class="flex items-center gap-2">
+            <button id="detail-expand-btn" class="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white hidden" title="展开/收起子节点">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <button id="detail-close" class="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="detail-content" class="flex-1 overflow-y-auto p-4">
+          <p class="text-gray-500 text-center">点击节点查看详情<br>双击节点展开/收起</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 帮助提示 -->
+    <div id="help-tooltip" class="fixed bottom-4 left-4 glass rounded-xl p-4 max-w-sm z-30 text-sm text-gray-300">
+      <h4 class="font-semibold text-white mb-2">操作提示</h4>
+      <ul class="space-y-1 text-xs">
+        <li>• 鼠标滚轮：缩放视图</li>
+        <li>• 拖拽空白处：平移视图</li>
+        <li>• 单击节点：查看详情</li>
+        <li>• 双击节点：展开/收起子节点</li>
+        <li>• 拖拽节点：调整位置</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 数据文件 -->
+  <script src="js/comprehensive-data.js?v=2"></script>
+  <script src="js/data-extensions.js?v=2"></script>
+  <script src="js/additional-domains.js?v=2"></script>
+  
+  <!-- 应用脚本 -->
+  <script type="module">
+    // 导入模块
+    import { CanvasRenderer } from './src/modules/visualization/CanvasRenderer.js';
+    import { ForceLayout } from './src/modules/visualization/ForceLayout.js';
+    import { SearchEngine } from './src/modules/search/SearchEngine.js';
+    import { EventBus } from './src/core/EventBus.js';
+    import { StateManager } from './src/core/StateManager.js';
+    import { GraphDataManager } from './src/data/GraphDataManager.js';
+    import { DataLoader } from './src/data/DataLoader.js';
+    import { ExportManager } from './src/modules/export/ExportManager.js';
+    
+    // 全局状态
+    let renderer = null;
+    let forceLayout = null;
+    let searchEngine = null;
+    let eventBus = null;
+    let stateManager = null;
+    let dataManager = null;
+    let dataLoader = null;
+    let exportManager = null;
+    
+    // 更新加载状态
+    function updateLoadingStatus(text) {
+      const status = document.getElementById('loading-status');
+      if (status) {
+        status.textContent = text;
+      }
+    }
+    
+    // 隐藏加载界面
+    function hideLoadingScreen() {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        loadingScreen.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+        }, 500);
+      }
+    }
+    
+    // 显示错误
+    function showError(message) {
+      console.error(message);
+      updateLoadingStatus('错误: ' + message);
+      const status = document.getElementById('loading-status');
+      if (status) {
+        status.className = 'text-red-400';
+      }
+    }
+    
+    // 初始化领域筛选器
+    function initDomainFilters() {
+      const container = document.getElementById('domain-filters');
+      if (!container) return;
+      
+      const domains = [
+        { id: 'learning', name: '学习成长', color: '#3b82f6' },
+        { id: 'career', name: '职业发展', color: '#10b981' },
+        { id: 'relationship', name: '人际关系', color: '#f59e0b' },
+        { id: 'mental', name: '心理健康', color: '#8b5cf6' },
+        { id: 'emotion', name: '情感生活', color: '#ec4899' },
+        { id: 'social', name: '社会适应', color: '#06b6d4' }
+      ];
+      
+      container.innerHTML = domains.map(d => `
+        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" class="domain-filter rounded border-gray-600" value="${d.id}" checked data-color="${d.color}">
+          <span class="w-2 h-2 rounded-full" style="background: ${d.color}"></span>
+          ${d.name}
+        </label>
+      `).join('');
+      
+      container.querySelectorAll('.domain-filter').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          updateVisibility();
+        });
+      });
+    }
+    
+    // 更新可见性
+    function updateVisibility() {
+      if (!dataManager) return;
+      
+      const checkedDomains = Array.from(document.querySelectorAll('.domain-filter:checked')).map(cb => cb.value);
+      const checkedSeverities = Array.from(document.querySelectorAll('.severity-filter:checked')).map(cb => cb.value);
+      
+      dataManager.nodes.forEach((node, id) => {
+        if (node.type === 'center') {
+          node.visible = true;
+        } else if (node.type === 'domain') {
+          node.visible = checkedDomains.includes(node.id);
+          if (!node.visible) {
+            dataManager.collapseNode(node.id);
+          }
+        } else {
+          const domainId = node.id.split('-')[0];
+          const isDomainVisible = checkedDomains.includes(domainId);
+          const isSeverityMatch = !node.severity || checkedSeverities.includes(node.severity);
+          
+          if (node.parent) {
+            const parent = dataManager.nodes.get(node.parent);
+            node.visible = isDomainVisible && isSeverityMatch && parent && parent.visible && dataManager.isExpanded(node.parent);
+          } else {
+            node.visible = isDomainVisible && isSeverityMatch;
+          }
+        }
+      });
+      
+      renderer.setData(dataManager.getVisibleNodes(), dataManager.getVisibleLinks());
+      updateStats();
+    }
+    
+    // 更新统计
+    function updateStats() {
+      if (!renderer || !dataManager) return;
+      
+      const stats = dataManager.getStatistics();
+      
+      document.getElementById('stat-total').textContent = stats.totalNodes;
+      document.getElementById('stat-visible').textContent = stats.visibleNodes;
+      document.getElementById('stat-links').textContent = stats.visibleLinks;
+      document.getElementById('stat-fps').textContent = renderer.fps;
+      
+      document.getElementById('perf-fps').textContent = renderer.fps;
+      document.getElementById('perf-nodes').textContent = stats.totalNodes;
+      document.getElementById('perf-visible').textContent = stats.visibleNodes;
+      document.getElementById('perf-expanded').textContent = stats.expandedNodes;
+      document.getElementById('perf-zoom').textContent = (renderer.viewport?.zoom || 1).toFixed(2) + 'x';
+      
+      if (performance.memory) {
+        const usedMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
+        document.getElementById('perf-memory').textContent = usedMB + ' MB';
+      }
+    }
+    
+    // 显示节点详情
+    function showNodeDetail(node) {
+      const panel = document.getElementById('detail-panel');
+      const title = document.getElementById('detail-title');
+      const content = document.getElementById('detail-content');
+      const expandBtn = document.getElementById('detail-expand-btn');
+      
+      if (!panel || !title || !content) return;
+      
+      title.textContent = node.name;
+      
+      const severityColors = {
+        critical: 'red',
+        high: 'orange',
+        medium: 'yellow',
+        low: 'green'
+      };
+      
+      const severityTexts = {
+        critical: '严重',
+        high: '高',
+        medium: '中',
+        low: '低'
+      };
+      
+      // 显示/隐藏展开按钮
+      if (node.hasChildren) {
+        expandBtn.classList.remove('hidden');
+        const isExpanded = dataManager.isExpanded(node.id);
+        expandBtn.innerHTML = isExpanded ? 
+          `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>` :
+          `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>`;
+        expandBtn.onclick = () => {
+          toggleNodeExpansion(node.id);
+        };
+      } else {
+        expandBtn.classList.add('hidden');
+      }
+      
+      // 构建详情内容
+      let html = `
+        <div class="space-y-4">
+          <div class="detail-section">
+            <div class="detail-label">类型</div>
+            <div class="detail-content">${getNodeTypeText(node.type)}</div>
+          </div>
+      `;
+      
+      if (node.severity) {
+        html += `
+          <div class="detail-section">
+            <div class="detail-label">严重程度</div>
+            <div class="detail-content">
+              <span class="inline-block w-2 h-2 rounded-full bg-${severityColors[node.severity]}-500 mr-1"></span>
+              ${severityTexts[node.severity]}
+            </div>
+          </div>
+        `;
+      }
+      
+      if (node.description) {
+        html += `
+          <div class="detail-section">
+            <div class="detail-label">描述</div>
+            <div class="detail-content">${node.description}</div>
+          </div>
+        `;
+      }
+      
+      if (node.symptoms && node.symptoms.length > 0) {
+        html += `
+          <div class="detail-section">
+            <div class="detail-label">症状表现</div>
+            <div class="detail-content">
+              <ul class="list-disc list-inside space-y-1">
+                ${node.symptoms.map(s => `<li>${s}</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+        `;
+      }
+      
+      if (node.solutions && node.solutions.length > 0) {
+        html += `
+          <div class="detail-section">
+            <div class="detail-label">解决方案</div>
+            <div class="detail-content space-y-2">
+              ${node.solutions.map((sol, i) => `
+                <div class="solution-item">
+                  <div class="font-medium text-indigo-300">${sol.title || `方案 ${i + 1}`}</div>
+                  <div class="text-sm text-gray-400 mt-1">${sol.description || sol}</div>
+                  ${sol.steps ? `
+                    <ol class="list-decimal list-inside mt-2 text-sm text-gray-300 space-y-1">
+                      ${sol.steps.map(step => `<li>${step}</li>`).join('')}
+                    </ol>
+                  ` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      if (node.cases && node.cases.length > 0) {
+        html += `
+          <div class="detail-section">
+            <div class="detail-label">真实案例</div>
+            <div class="detail-content space-y-2">
+              ${node.cases.map(c => `
+                <div class="case-card">
+                  <div class="case-title">${c.title || '案例'}</div>
+                  <div class="text-sm text-gray-300">${c.description || c}</div>
+                  ${c.outcome ? `<div class="text-sm text-green-400 mt-2">结果: ${c.outcome}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      if (node.resources && node.resources.length > 0) {
+        html += `
+          <div class="detail-section">
+            <div class="detail-label">推荐资源</div>
+            <div class="detail-content space-y-1">
+              ${node.resources.map(r => `
+                <div class="flex items-center gap-2 text-sm">
+                  <span class="text-indigo-400">📚</span>
+                  <span>${r.title || r.name || r}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      if (node.hasChildren) {
+        const children = dataManager.getChildren(node.id);
+        html += `
+          <div class="detail-section">
+            <div class="detail-label">子节点 (${children.length})</div>
+            <div class="detail-content">
+              <div class="flex flex-wrap gap-2">
+                ${children.map(c => `
+                  <span class="px-2 py-1 bg-white/10 rounded text-xs">${c.name}</span>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      if (node.icon) {
+        html += `
+          <div class="detail-section">
+            <div class="detail-label">图标</div>
+            <div class="detail-content text-2xl">${node.icon}</div>
+          </div>
+        `;
+      }
+      
+      html += '</div>';
+      
+      content.innerHTML = html;
+      
+      panel.classList.remove('translate-x-full');
+      panel.classList.add('translate-x-0');
+    }
+    
+    function getNodeTypeText(type) {
+      const typeMap = {
+        'center': '中心主题',
+        'domain': '领域',
+        'subcategory': '子类别',
+        'problem': '问题节点'
+      };
+      return typeMap[type] || type;
+    }
+    
+    // 切换节点展开/收起
+    function toggleNodeExpansion(nodeId) {
+      if (!dataManager) return;
+      
+      const isExpanded = dataManager.isExpanded(nodeId);
+      if (isExpanded) {
+        dataManager.collapseNode(nodeId);
+      } else {
+        dataManager.expandNode(nodeId);
+      }
+      
+      renderer.setData(dataManager.getVisibleNodes(), dataManager.getVisibleLinks());
+      
+      const node = dataManager.nodes.get(nodeId);
+      if (node) {
+        showNodeDetail(node);
+      }
+      
+      updateStats();
+    }
+    
+    // 聚焦节点
+    function focusNode(nodeId) {
+      if (!renderer || !dataManager) return;
+      
+      const node = dataManager.nodes.get(nodeId);
+      if (node) {
+        renderer.selectedNode = node;
+        
+        const container = document.getElementById('canvas-container');
+        const centerX = container.clientWidth / 2;
+        const centerY = container.clientHeight / 2;
+        
+        renderer.setViewport(
+          centerX - node.x * renderer.viewport.zoom,
+          centerY - node.y * renderer.viewport.zoom,
+          renderer.viewport.zoom
+        );
+        
+        showNodeDetail(node);
+      }
+    }
+    
+    // 展开所有节点
+    function expandAllNodes() {
+      if (!dataManager) return;
+      
+      dataManager.nodes.forEach((node, id) => {
+        if (node.hasChildren && !dataManager.isExpanded(id)) {
+          dataManager.expandNode(id);
+        }
+      });
+      
+      renderer.setData(dataManager.getVisibleNodes(), dataManager.getVisibleLinks());
+      updateStats();
+    }
+    
+    // 收起所有节点
+    function collapseAllNodes() {
+      if (!dataManager) return;
+      
+      dataManager.nodes.forEach((node, id) => {
+        if (node.type !== 'center' && node.type !== 'domain') {
+          if (dataManager.isExpanded(id)) {
+            dataManager.collapseNode(id);
+          }
+        }
+      });
+      
+      renderer.setData(dataManager.getVisibleNodes(), dataManager.getVisibleLinks());
+      updateStats();
+    }
+    
+    // 重置视图
+    function resetView() {
+      if (!renderer) return;
+      renderer.resetViewport();
+    }
+    
+    // 渲染搜索建议
+    function renderSuggestions(suggestions) {
+      const container = document.getElementById('search-suggestions');
+      if (!container) return;
+      
+      if (suggestions.length === 0) {
+        container.classList.add('hidden');
+        return;
+      }
+      
+      container.innerHTML = suggestions.map(s => `
+        <div class="suggestion-item px-4 py-2 cursor-pointer text-sm text-gray-300 hover:text-white flex items-center justify-between" data-text="${s.text}">
+          <span>${s.text}</span>
+          <span class="text-xs text-gray-500">${s.docCount} 个结果</span>
+        </div>
+      `).join('');
+      
+      container.classList.remove('hidden');
+      
+      container.querySelectorAll('.suggestion-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const input = document.getElementById('search-input');
+          if (input) {
+            input.value = item.dataset.text;
+          }
+          container.classList.add('hidden');
+          performSearch(item.dataset.text);
+        });
+      });
+    }
+    
+    // 渲染搜索结果
+    function renderSearchResults(result) {
+      const container = document.getElementById('search-results');
+      const suggestions = document.getElementById('search-suggestions');
+      if (!container) return;
+      
+      if (result.results.length === 0) {
+        container.innerHTML = '<div class="p-4 text-sm text-gray-500 text-center">未找到相关结果</div>';
+      } else {
+        container.innerHTML = result.results.map(r => `
+          <div class="search-result-item px-4 py-3 cursor-pointer border-b border-white/5 last:border-0 hover:bg-white/5" data-id="${r.id}">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-sm font-medium text-white">${r.document.name}</span>
+              ${r.document.severity ? `<span class="w-2 h-2 rounded-full severity-${r.document.severity}"></span>` : ''}
+            </div>
+            ${r.highlighted?.description ? `
+              <div class="text-xs text-gray-400 line-clamp-2">${r.highlighted.description}</div>
+            ` : ''}
+          </div>
+        `).join('');
+        
+        container.querySelectorAll('.search-result-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const nodeId = item.dataset.id;
+            focusNode(nodeId);
+            container.classList.add('hidden');
+          });
+        });
+      }
+      
+      container.classList.remove('hidden');
+      if (suggestions) {
+        suggestions.classList.add('hidden');
+      }
+      
+      document.getElementById('perf-search').textContent = `${result.time.toFixed(1)}ms`;
+    }
+    
+    // 执行搜索
+    function performSearch(query) {
+      if (!searchEngine || query.length < 2) return;
+      
+      const result = searchEngine.search(query, {
+        limit: 10,
+        highlight: true
+      });
+      
+      renderSearchResults(result);
+    }
+    
+    // 设置事件监听
+    function setupEventListeners() {
+      // 搜索功能
+      const searchInput = document.getElementById('search-input');
+      const searchResults = document.getElementById('search-results');
+      
+      if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+          clearTimeout(searchTimeout);
+          const query = e.target.value.trim();
+          
+          if (query.length < 2) {
+            if (searchResults) searchResults.classList.add('hidden');
+            return;
+          }
+          
+          searchTimeout = setTimeout(() => {
+            if (searchEngine) {
+              const suggestions = searchEngine.autocomplete(query, 5);
+              renderSuggestions(suggestions);
+            }
+            performSearch(query);
+          }, 150);
+        });
+      }
+      
+      // 点击外部关闭搜索结果
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#search-input') && !e.target.closest('#search-results') && !e.target.closest('#search-suggestions')) {
+          if (searchResults) searchResults.classList.add('hidden');
+          const suggestions = document.getElementById('search-suggestions');
+          if (suggestions) suggestions.classList.add('hidden');
+        }
+      });
+      
+      // 工具栏按钮
+      document.getElementById('layout-toggle-btn')?.addEventListener('click', () => {
+        if (forceLayout) {
+          if (forceLayout.running) {
+            forceLayout.stop();
+            showNotification('力导向布局已停止');
+          } else {
+            // 更新数据
+            forceLayout.setData(
+              dataManager.getVisibleNodes(),
+              dataManager.getVisibleLinks()
+            );
+            forceLayout.start();
+            showNotification('力导向布局已启动');
+          }
+        }
+      });
+      
+      document.getElementById('reset-view-btn')?.addEventListener('click', resetView);
+      document.getElementById('expand-all-btn')?.addEventListener('click', expandAllNodes);
+      document.getElementById('collapse-all-btn')?.addEventListener('click', collapseAllNodes);
+      
+      // 导出按钮
+      document.getElementById('export-btn')?.addEventListener('click', async () => {
+        if (!renderer || !exportManager) return;
+        
+        try {
+          const result = await exportManager.downloadImage(
+            renderer.canvas,
+            `knowledge-graph-${Date.now()}.png`
+          );
+          
+          if (result.success) {
+            showNotification('图片已导出');
+          } else {
+            showNotification('导出失败: ' + result.error, 'error');
+          }
+        } catch (error) {
+          showNotification('导出失败', 'error');
+        }
+      });
+      
+      // 性能面板
+      const perfToggle = document.getElementById('perf-toggle');
+      const perfPanel = document.getElementById('perf-panel');
+      const perfClose = document.getElementById('perf-close');
+      
+      if (perfToggle && perfPanel) {
+        perfToggle.addEventListener('click', () => {
+          perfPanel.classList.toggle('hidden');
+        });
+      }
+      
+      if (perfClose && perfPanel) {
+        perfClose.addEventListener('click', () => {
+          perfPanel.classList.add('hidden');
+        });
+      }
+      
+      // 全屏
+      const fullscreenBtn = document.getElementById('fullscreen-btn');
+      if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', () => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+          } else {
+            document.exitFullscreen();
+          }
+        });
+      }
+      
+      // 侧边栏
+      const menuToggle = document.getElementById('menu-toggle');
+      const sidebar = document.getElementById('sidebar');
+      
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+          sidebar.classList.toggle('open');
+        });
+      }
+      
+      // 详情面板
+      const detailClose = document.getElementById('detail-close');
+      const detailPanel = document.getElementById('detail-panel');
+      
+      if (detailClose && detailPanel) {
+        detailClose.addEventListener('click', () => {
+          detailPanel.classList.remove('translate-x-0');
+          detailPanel.classList.add('translate-x-full');
+        });
+      }
+      
+      // 严重程度筛选
+      document.querySelectorAll('.severity-filter').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          updateVisibility();
+        });
+      });
+      
+      // Canvas 节点点击事件
+      const canvasContainer = document.getElementById('canvas-container');
+      if (canvasContainer) {
+        canvasContainer.addEventListener('nodeClick', (e) => {
+          const node = e.detail;
+          if (node) {
+            showNodeDetail(node);
+          }
+        });
+        
+        canvasContainer.addEventListener('nodeDoubleClick', (e) => {
+          const node = e.detail;
+          if (node && node.hasChildren) {
+            toggleNodeExpansion(node.id);
+          }
+        });
+      }
+      
+      // 定期更新统计
+      setInterval(updateStats, 1000);
+    }
+    
+    // 主初始化函数
+    async function initApp() {
+      try {
+        updateLoadingStatus('初始化事件系统...');
+        eventBus = new EventBus();
+        
+        updateLoadingStatus('初始化状态管理...');
+        stateManager = new StateManager();
+        
+        updateLoadingStatus('初始化数据管理器...');
+        dataManager = new GraphDataManager();
+        
+        updateLoadingStatus('初始化数据加载器...');
+        dataLoader = new DataLoader(dataManager);
+        
+        updateLoadingStatus('初始化搜索引擎...');
+        searchEngine = new SearchEngine({
+          maxResults: 20,
+          fuzzyThreshold: 0.6
+        });
+        
+        updateLoadingStatus('加载知识图谱数据...');
+        
+        // 加载数据
+        let graphData;
+        if (typeof ComprehensiveData !== 'undefined') {
+          // 使用 comprehensive-data.js 中的数据
+          graphData = ComprehensiveData;
+        } else if (typeof knowledgeGraphData !== 'undefined') {
+          // 备用变量名
+          graphData = knowledgeGraphData;
+        } else {
+          // 生成模拟数据
+          graphData = generateMockData();
+        }
+        
+        // 转换并加载数据
+        const result = dataLoader.loadInlineData(graphData, { merge: false });
+        console.log(`📊 已加载 ${result.nodeCount} 个节点, ${result.linkCount} 个连接`);
+        
+        // 合并扩展数据（如果存在）
+        if (typeof dataExtensions !== 'undefined') {
+          updateLoadingStatus('合并扩展数据...');
+          dataLoader.loadInlineData(dataExtensions, { merge: true, priority: 1 });
+          console.log('📦 已合并扩展数据包');
+        }
+        
+        // 合并补充领域数据（如果存在）
+        if (typeof additionalDomains !== 'undefined') {
+          updateLoadingStatus('合并补充领域数据...');
+          dataLoader.loadInlineData(additionalDomains, { merge: true, priority: 2 });
+          console.log('📦 已合并补充领域数据');
+        }
+        
+        updateLoadingStatus('准备渲染容器...');
+        const canvasContainer = document.getElementById('canvas-container');
+        if (!canvasContainer) {
+          throw new Error('Canvas container not found');
+        }
+        
+        await new Promise(resolve => {
+          const checkSize = () => {
+            const rect = canvasContainer.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              resolve();
+            } else {
+              requestAnimationFrame(checkSize);
+            }
+          };
+          checkSize();
+          setTimeout(resolve, 1000);
+        });
+        
+        updateLoadingStatus('初始化 Canvas 渲染器...');
+        renderer = new CanvasRenderer(canvasContainer, {
+          backgroundColor: '#0f172a',
+          width: canvasContainer.clientWidth,
+          height: canvasContainer.clientHeight
+        });
+        
+        renderer.setDataManager(dataManager);
+        
+        await new Promise(resolve => {
+          const checkInit = () => {
+            if (renderer.isInitialized) {
+              resolve();
+            } else {
+              setTimeout(checkInit, 50);
+            }
+          };
+          checkInit();
+          setTimeout(resolve, 3000);
+        });
+        
+        updateLoadingStatus('设置渲染数据...');
+        renderer.setData(dataManager.getVisibleNodes(), dataManager.getVisibleLinks());
+        
+        // 索引到搜索引擎
+        updateLoadingStatus('构建搜索索引...');
+        dataManager.getAllNodes().forEach(node => {
+          searchEngine.addDocument({
+            id: node.id,
+            name: node.name,
+            description: node.description || '',
+            type: node.type,
+            severity: node.severity,
+            tags: node.tags || []
+          });
+        });
+        
+        updateLoadingStatus('初始化力导向布局...');
+        forceLayout = new ForceLayout({
+          repulsion: 800,
+          attraction: 0.03,
+          linkDistance: 120,
+          levelSeparation: 150,
+          alphaDecay: 0.01
+        });
+        
+        // 设置力导向布局数据
+        forceLayout.setData(
+          dataManager.getVisibleNodes(),
+          dataManager.getVisibleLinks()
+        );
+        
+        // 监听布局更新
+        forceLayout.on('tick', ({ nodes }) => {
+          // 更新节点位置
+          nodes.forEach(node => {
+            const dataNode = dataManager.nodes.get(node.id);
+            if (dataNode && dataNode.fx === null && dataNode.fy === null) {
+              dataNode.x = node.x;
+              dataNode.y = node.y;
+            }
+          });
+          
+          // 触发重新渲染
+          if (renderer) {
+            renderer.render();
+          }
+        });
+        
+        // 启动力导向布局（可选，默认不启动以保持初始位置）
+        // forceLayout.start();
+        
+        updateLoadingStatus('初始化导出管理器...');
+        exportManager = new ExportManager({
+          scale: 2,
+          quality: 0.9,
+          format: 'png'
+        });
+        
+        updateLoadingStatus('初始化界面...');
+        initDomainFilters();
+        setupEventListeners();
+        updateStats();
+        
+        updateLoadingStatus('完成！');
+        setTimeout(hideLoadingScreen, 300);
+        
+        console.log('✅ 应用初始化完成');
+        console.log(`📊 节点总数: ${dataManager.getStatistics().totalNodes}`);
+        console.log(`🔗 连接总数: ${dataManager.getStatistics().totalLinks}`);
+        console.log('💡 提示：点击"布局"按钮启用力导向布局');
+        
+      } catch (error) {
+        showError(error.message);
+        console.error('应用初始化失败:', error);
+      }
+    }
+    
+    // 显示通知
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-20 right-4 px-4 py-2 rounded-lg text-sm z-50 transition-all duration-300 ${
+        type === 'error' ? 'bg-red-500/90' : 'bg-indigo-500/90'
+      } text-white backdrop-blur`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      // 动画进入
+      requestAnimationFrame(() => {
+        notification.style.transform = 'translateX(0)';
+        notification.style.opacity = '1';
+      });
+      
+      // 3秒后移除
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        notification.style.opacity = '0';
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 3000);
+    }
+    
+    // 生成模拟数据（备用）
+    function generateMockData() {
+      const nodes = [];
+      const links = [];
+      
+      nodes.push({
+        id: 'center',
+        name: '00后人生问题',
+        type: 'center',
+        x: 0,
+        y: 0,
+        radius: 50,
+        color: '#6366f1',
+        icon: '🧭',
+        description: '当代年轻人面临的六大核心人生挑战',
+        hasChildren: true,
+        expanded: true
+      });
+      
+      const domains = [
+        { id: 'learning', name: '学习成长', color: '#3b82f6', icon: '📚', angle: 0 },
+        { id: 'career', name: '职业发展', color: '#10b981', icon: '💼', angle: 60 },
+        { id: 'relationship', name: '人际关系', color: '#f59e0b', icon: '🤝', angle: 120 },
+        { id: 'mental', name: '心理健康', color: '#8b5cf6', icon: '🧠', angle: 180 },
+        { id: 'emotion', name: '情感生活', color: '#ec4899', icon: '💕', angle: 240 },
+        { id: 'social', name: '社会适应', color: '#06b6d4', icon: '🌍', angle: 300 }
+      ];
+      
+      const radius = 200;
+      
+      domains.forEach((domain) => {
+        const rad = (domain.angle * Math.PI) / 180;
+        const x = Math.cos(rad) * radius;
+        const y = Math.sin(rad) * radius;
+        
+        nodes.push({
+          id: domain.id,
+          name: domain.name,
+          type: 'domain',
+          x, y,
+          radius: 35,
+          color: domain.color,
+          icon: domain.icon,
+          description: `${domain.name}领域的核心问题集合`,
+          hasChildren: true,
+          expanded: true
+        });
+        
+        links.push({
+          source: 'center',
+          target: domain.id,
+          width: 3,
+          color: domain.color,
+          type: 'hierarchy'
+        });
+      });
+      
+      return { nodes, links };
+    }
+    
+    // 启动应用
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
+    }
+  </script>
+</body>
+</html>
